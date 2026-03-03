@@ -15,6 +15,8 @@ import RankingPage from '../pages/RankingPage';
 import MetasPage from '../pages/MetasPage';
 import ComentariosPage from '../pages/ComentariosPage';
 import UsuariosPage from '../pages/UsuariosPage';
+import RelatoriosPage from '../pages/RelatoriosPage';
+import RelatorioPreviewPage from '../pages/RelatorioPreviewPage';
 
 export function AppRouter() {
   return (
@@ -22,6 +24,7 @@ export function AppRouter() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/alterar-senha" element={<PrivateRoute><AlterarSenhaPage /></PrivateRoute>} />
+        <Route path="/relatorios/preview/:slug" element={<PrivateRoute><GestorRoute><RelatorioPreviewPage /></GestorRoute></PrivateRoute>} />
         <Route path="/" element={<PrivateRoute><AppLayout /></PrivateRoute>}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
@@ -35,6 +38,7 @@ export function AppRouter() {
           <Route path="metas" element={<GestorRoute><MetasPage /></GestorRoute>} />
           <Route path="comentarios" element={<GestorRoute><ComentariosPage /></GestorRoute>} />
           <Route path="usuarios" element={<GestorRoute><UsuariosPage /></GestorRoute>} />
+          <Route path="relatorios" element={<GestorRoute><RelatoriosPage /></GestorRoute>} />
         </Route>
       </Routes>
     </BrowserRouter>

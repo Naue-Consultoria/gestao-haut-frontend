@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutGrid, User, Activity, Search, Layers, BookOpen, DollarSign,
-  BarChart3, Target, MessageSquare, Users, LogOut, ChevronsLeft, ChevronsRight
+  BarChart3, Target, MessageSquare, Users, FileText, LogOut, ChevronsLeft, ChevronsRight
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getInitials } from '../../utils/helpers';
@@ -24,6 +24,7 @@ const gestorNav = [
   { path: '/metas', label: 'Definir Metas', icon: Target },
   { path: '/comentarios', label: 'Comentários', icon: MessageSquare },
   { path: '/usuarios', label: 'Usuários', icon: Users },
+  { path: '/relatorios', label: 'Relatórios', icon: FileText },
 ];
 
 interface SidebarProps {
