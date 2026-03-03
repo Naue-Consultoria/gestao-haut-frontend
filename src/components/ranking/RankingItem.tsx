@@ -9,8 +9,8 @@ interface RankingItemProps {
 }
 
 export function RankingItem({ position, name, team, stats }: RankingItemProps) {
-  const posColor = position === 1 ? 'text-black' : position === 2 ? 'text-gray-600' : position === 3 ? 'text-gray-500' : 'text-gray-300';
-  const avatarClass = position === 1 ? 'bg-black text-white' : 'bg-gray-100 text-gray-600';
+  const posColor = position === 1 ? 'text-accent' : position === 2 ? 'text-gray-600' : position === 3 ? 'text-gray-500' : 'text-gray-300';
+  const avatarClass = position === 1 ? 'bg-accent text-white' : 'bg-gray-100 text-gray-600';
 
   return (
     <div className="flex items-center gap-4 px-6 py-5 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors">

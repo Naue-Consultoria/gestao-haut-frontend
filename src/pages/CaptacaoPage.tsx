@@ -20,6 +20,7 @@ export default function CaptacaoPage() {
   const { user } = useAuth();
   const { toast, showToast } = useToast();
   const [month, setMonth] = useState(0);
+  const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<Captacao[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -32,18 +33,18 @@ export default function CaptacaoPage() {
   const load = useCallback(() => {
     if (!user) return;
     setLoading(true);
-    captacoesService.list(user.id, month, CURRENT_YEAR)
+    captacoesService.list(user.id, month, year)
       .then(setData)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [user, month]);
+  }, [user, month, year]);
 
   useEffect(() => { load(); }, [load]);
 
   const handleSave = async () => {
     if (!oportunidade) { showToast('Preencha a oportunidade'); return; }
     try {
-      await captacoesService.create({ month, year: CURRENT_YEAR, oportunidade, exclusivo, origem: origem as Captacao['origem'], vgv: Number(vgv) || 0 });
+      await captacoesService.create({ month, year, oportunidade, exclusivo, origem: origem as Captacao['origem'], vgv: Number(vgv) || 0 });
       setModalOpen(false);
       setOportunidade(''); setExclusivo('NÃO'); setOrigem('RELACIONAMENTO'); setVgv('');
       showToast('Captação registrada');
@@ -60,7 +61,7 @@ export default function CaptacaoPage() {
   return (
     <div>
       <PageHeader title="Quadro de Captação" description="Imóveis captados no mês" action={<Button icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>Registrar Captação</Button>} />
-      <MonthTabs activeMonth={month} onSelect={setMonth} />
+      <MonthTabs activeMonth={month} onSelect={setMonth} activeYear={year} onYearChange={setYear} />
 
       <DataSection title="Captações Registradas" badge={`${data.length} registros`}>
         {loading ? <div className="text-center py-12 text-gray-400">Carregando...</div> : data.length === 0 ? <EmptyState /> : (

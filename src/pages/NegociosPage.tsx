@@ -22,6 +22,7 @@ export default function NegociosPage() {
   const { user } = useAuth();
   const { toast, showToast } = useToast();
   const [month, setMonth] = useState(0);
+  const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<Negocio[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -33,8 +34,8 @@ export default function NegociosPage() {
   const load = useCallback(() => {
     if (!user) return;
     setLoading(true);
-    negociosService.list(user.id, month, CURRENT_YEAR).then(setData).catch(console.error).finally(() => setLoading(false));
-  }, [user, month]);
+    negociosService.list(user.id, month, year).then(setData).catch(console.error).finally(() => setLoading(false));
+  }, [user, month, year]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -43,7 +44,7 @@ export default function NegociosPage() {
   const handleSave = async () => {
     if (!oportunidade) { showToast('Preencha a oportunidade'); return; }
     try {
-      await negociosService.create({ month, year: CURRENT_YEAR, oportunidade, origem: origem as Negocio['origem'], vgv: Number(vgv) || 0 });
+      await negociosService.create({ month, year, oportunidade, origem: origem as Negocio['origem'], vgv: Number(vgv) || 0 });
       setModalOpen(false); setOportunidade(''); setOrigem('RELACIONAMENTO'); setVgv('');
       showToast('Negócio registrado'); load();
     } catch { showToast('Erro ao salvar'); }
@@ -58,7 +59,7 @@ export default function NegociosPage() {
   return (
     <div>
       <PageHeader title="Negócios Levantados" description="Oportunidades geradas no mês" action={<Button icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>Registrar Negócio</Button>} />
-      <MonthTabs activeMonth={month} onSelect={setMonth} />
+      <MonthTabs activeMonth={month} onSelect={setMonth} activeYear={year} onYearChange={setYear} />
 
       <StatsGrid>
         <StatCard label="VGV Total Negócios" value={fmt(totalVGV)} />

@@ -12,7 +12,7 @@ export function ProgressBar({ percentage, label, maxLabel }: ProgressBarProps) {
     <div className="mt-2">
       <div className="h-1.5 bg-gray-100 rounded-[3px] overflow-hidden">
         <div
-          className={`h-full rounded-[3px] transition-all duration-1000 ${isOver ? 'bg-positive' : 'bg-black'}`}
+          className={`h-full rounded-[3px] transition-all duration-1000 ${isOver ? 'bg-positive' : 'bg-accent'}`}
           style={{ width: `${capped}%` }}
         />
       </div>

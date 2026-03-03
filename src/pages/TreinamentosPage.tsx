@@ -19,6 +19,7 @@ export default function TreinamentosPage() {
   const { user } = useAuth();
   const { toast, showToast } = useToast();
   const [month, setMonth] = useState(0);
+  const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<Treinamento[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -30,15 +31,15 @@ export default function TreinamentosPage() {
   const load = useCallback(() => {
     if (!user) return;
     setLoading(true);
-    treinamentosService.list(user.id, month, CURRENT_YEAR).then(setData).catch(console.error).finally(() => setLoading(false));
-  }, [user, month]);
+    treinamentosService.list(user.id, month, year).then(setData).catch(console.error).finally(() => setLoading(false));
+  }, [user, month, year]);
 
   useEffect(() => { load(); }, [load]);
 
   const handleSave = async () => {
     if (!atividade) { showToast('Preencha a atividade'); return; }
     try {
-      await treinamentosService.create({ month, year: CURRENT_YEAR, atividade, local, horas: Number(horas) || 0 });
+      await treinamentosService.create({ month, year, atividade, local, horas: Number(horas) || 0 });
       setModalOpen(false); setAtividade(''); setLocal(''); setHoras('');
       showToast('Participação registrada'); load();
     } catch { showToast('Erro ao salvar'); }
@@ -53,7 +54,7 @@ export default function TreinamentosPage() {
   return (
     <div>
       <PageHeader title="Treinamentos e Ações" description="Participação em reuniões, treinamentos e plantões" action={<Button icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>Registrar Participação</Button>} />
-      <MonthTabs activeMonth={month} onSelect={setMonth} />
+      <MonthTabs activeMonth={month} onSelect={setMonth} activeYear={year} onYearChange={setYear} />
 
       <DataSection title="Participações" badge={`${data.length} registros`}>
         {loading ? <div className="text-center py-12 text-gray-400">Carregando...</div> : data.length === 0 ? <EmptyState /> : (

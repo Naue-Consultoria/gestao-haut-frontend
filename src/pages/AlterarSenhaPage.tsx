@@ -80,7 +80,7 @@ export default function AlterarSenhaPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-white text-black border-none rounded-sm font-main text-sm font-semibold tracking-widest uppercase cursor-pointer transition-all duration-300 mt-2 hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(255,255,255,0.15)] disabled:opacity-50"
+            className="w-full py-4 bg-accent text-white border-none rounded-sm font-main text-sm font-semibold tracking-widest uppercase cursor-pointer transition-all duration-300 mt-2 hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(181,113,112,0.3)] disabled:opacity-50"
           >
             {loading ? 'Alterando...' : 'Alterar Senha'}
           </button>

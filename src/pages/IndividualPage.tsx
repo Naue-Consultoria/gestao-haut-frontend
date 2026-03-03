@@ -19,17 +19,18 @@ export default function IndividualPage() {
   const { user } = useAuth();
   const { brokers, selectedBrokerId, setSelectedBrokerId } = useBrokerSelector();
   const [month, setMonth] = useState(0);
+  const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<DashboardIndividual | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!selectedBrokerId) return;
     setLoading(true);
-    dashboardService.individual(selectedBrokerId, month, CURRENT_YEAR)
+    dashboardService.individual(selectedBrokerId, month, year)
       .then(setData)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [selectedBrokerId, month]);
+  }, [selectedBrokerId, month, year]);
 
   const chartData = Array.from({ length: 12 }, (_, i) => ({
     meta: i === month ? (data?.metaVGVMensal || 0) : 0,
@@ -44,7 +45,7 @@ export default function IndividualPage() {
         <BrokerSelect brokers={brokers} selectedId={selectedBrokerId} onChange={setSelectedBrokerId} />
       )}
 
-      <MonthTabs activeMonth={month} onSelect={setMonth} />
+      <MonthTabs activeMonth={month} onSelect={setMonth} activeYear={year} onYearChange={setYear} />
 
       {loading ? (
         <div className="text-center py-16 text-gray-400">Carregando...</div>

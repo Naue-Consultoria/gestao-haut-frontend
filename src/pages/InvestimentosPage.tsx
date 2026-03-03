@@ -22,6 +22,7 @@ export default function InvestimentosPage() {
   const { user } = useAuth();
   const { toast, showToast } = useToast();
   const [month, setMonth] = useState(0);
+  const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<Investimento[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -34,8 +35,8 @@ export default function InvestimentosPage() {
   const load = useCallback(() => {
     if (!user) return;
     setLoading(true);
-    investimentosService.list(user.id, month, CURRENT_YEAR).then(setData).catch(console.error).finally(() => setLoading(false));
-  }, [user, month]);
+    investimentosService.list(user.id, month, year).then(setData).catch(console.error).finally(() => setLoading(false));
+  }, [user, month, year]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -44,7 +45,7 @@ export default function InvestimentosPage() {
 
   const handleSave = async () => {
     try {
-      await investimentosService.create({ month, year: CURRENT_YEAR, tipo: tipo as Investimento['tipo'], produto, valor: Number(valor) || 0, leads: Number(leads) || 0 });
+      await investimentosService.create({ month, year, tipo: tipo as Investimento['tipo'], produto, valor: Number(valor) || 0, leads: Number(leads) || 0 });
       setModalOpen(false); setTipo('PORTAL'); setProduto(''); setValor(''); setLeads('');
       showToast('Investimento registrado'); load();
     } catch { showToast('Erro ao salvar'); }
@@ -59,7 +60,7 @@ export default function InvestimentosPage() {
   return (
     <div>
       <PageHeader title="Investimentos" description="Portais, patrocinados e outras ações" action={<Button icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>Registrar Investimento</Button>} />
-      <MonthTabs activeMonth={month} onSelect={setMonth} />
+      <MonthTabs activeMonth={month} onSelect={setMonth} activeYear={year} onYearChange={setYear} />
 
       <StatsGrid>
         <StatCard label="Valor Total Investido" value={fmt(totalValor)} />

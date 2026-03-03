@@ -22,6 +22,7 @@ export default function PositivacaoPage() {
   const { user } = useAuth();
   const { toast, showToast } = useToast();
   const [month, setMonth] = useState(0);
+  const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<Positivacao[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -34,11 +35,11 @@ export default function PositivacaoPage() {
   const load = useCallback(() => {
     if (!user) return;
     setLoading(true);
-    positivacoesService.list(user.id, month, CURRENT_YEAR)
+    positivacoesService.list(user.id, month, year)
       .then(setData)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [user, month]);
+  }, [user, month, year]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -48,7 +49,7 @@ export default function PositivacaoPage() {
   const handleSave = async () => {
     if (!oportunidade) { showToast('Preencha a oportunidade'); return; }
     try {
-      await positivacoesService.create({ month, year: CURRENT_YEAR, oportunidade, parceria, vgv: Number(vgv) || 0, comissao: Number(comissao) || 0 });
+      await positivacoesService.create({ month, year, oportunidade, parceria, vgv: Number(vgv) || 0, comissao: Number(comissao) || 0 });
       setModalOpen(false);
       setOportunidade(''); setParceria('NÃO'); setVgv(''); setComissao('');
       showToast('Venda registrada');
@@ -73,7 +74,7 @@ export default function PositivacaoPage() {
         description="Vendas efetivadas no mês"
         action={<Button icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>Registrar Venda</Button>}
       />
-      <MonthTabs activeMonth={month} onSelect={setMonth} />
+      <MonthTabs activeMonth={month} onSelect={setMonth} activeYear={year} onYearChange={setYear} />
 
       <StatsGrid>
         <StatCard label="VGV Total" value={fmt(totalVGV)} />

@@ -15,16 +15,17 @@ import { DashboardConsolidated } from '../types';
 
 export default function DashboardPage() {
   const [month, setMonth] = useState(0);
+  const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<DashboardConsolidated | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    dashboardService.consolidated(month, CURRENT_YEAR)
+    dashboardService.consolidated(month, year)
       .then(setData)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [month]);
+  }, [month, year]);
 
   const chartData = Array.from({ length: 12 }, (_, i) => ({
     meta: i === month ? (data?.metaVGV || 0) : 0,
@@ -34,7 +35,7 @@ export default function DashboardPage() {
   return (
     <div>
       <PageHeader title="Painel Consolidado" description="Visão geral de performance — todos os corretores" />
-      <MonthTabs activeMonth={month} onSelect={setMonth} />
+      <MonthTabs activeMonth={month} onSelect={setMonth} activeYear={year} onYearChange={setYear} />
 
       {loading ? (
         <div className="text-center py-16 text-gray-400">Carregando...</div>

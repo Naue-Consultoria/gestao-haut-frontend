@@ -62,7 +62,7 @@ export default function LoginPage() {
 
       <div className="relative z-10 w-full max-w-[420px] px-12">
         <div className="font-main text-[32px] font-bold tracking-[12px] text-white text-center mb-2">HAUT</div>
-        <div className="font-mono text-[11px] text-gray-500 text-center tracking-[3px] uppercase mb-12">Diário de Bordo 2026</div>
+        <div className="font-mono text-[11px] text-gray-500 text-center tracking-[3px] uppercase mb-12">Diário de Bordo</div>
 
         {!isRegister ? (
           <form onSubmit={handleLogin}>
@@ -72,7 +72,7 @@ export default function LoginPage() {
             <FormGroup label="Senha" dark>
               <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className={inputClass} />
             </FormGroup>
-            <button type="submit" disabled={loading} className="w-full py-4 bg-white text-black border-none rounded-sm font-main text-sm font-semibold tracking-widest uppercase cursor-pointer transition-all duration-300 mt-2 hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(255,255,255,0.15)] disabled:opacity-50">
+            <button type="submit" disabled={loading} className="w-full py-4 bg-accent text-white border-none rounded-sm font-main text-sm font-semibold tracking-widest uppercase cursor-pointer transition-all duration-300 mt-2 hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(181,113,112,0.3)] disabled:opacity-50">
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
             <div className="text-center mt-6">
@@ -101,7 +101,7 @@ export default function LoginPage() {
                 <option value="gestor">Gestor</option>
               </select>
             </FormGroup>
-            <button type="submit" disabled={loading} className="w-full py-4 bg-white text-black border-none rounded-sm font-main text-sm font-semibold tracking-widest uppercase cursor-pointer transition-all duration-300 mt-2 hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(255,255,255,0.15)] disabled:opacity-50">
+            <button type="submit" disabled={loading} className="w-full py-4 bg-accent text-white border-none rounded-sm font-main text-sm font-semibold tracking-widest uppercase cursor-pointer transition-all duration-300 mt-2 hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(181,113,112,0.3)] disabled:opacity-50">
               {loading ? 'Criando...' : 'Criar Conta'}
             </button>
             <div className="text-center mt-6">

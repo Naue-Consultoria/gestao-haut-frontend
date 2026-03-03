@@ -25,7 +25,7 @@ export function BarChart({ data, title }: BarChartProps) {
             <div key={i} className="flex-1 flex flex-col items-center h-full justify-end">
               <div className="flex gap-0.5 items-end h-full">
                 <div className="bg-gray-200 rounded-t w-[18px] transition-all duration-1000" style={{ height: `${mh}px` }} />
-                <div className="bg-black rounded-t w-[18px] transition-all duration-1000" style={{ height: `${rh}px` }} />
+                <div className="bg-accent rounded-t w-[18px] transition-all duration-1000" style={{ height: `${rh}px` }} />
               </div>
               <div className="text-[10px] text-gray-500 mt-2 text-center">{d.label || MONTHS_SHORT[i]}</div>
             </div>
@@ -37,7 +37,7 @@ export function BarChart({ data, title }: BarChartProps) {
           <div className="w-2.5 h-2.5 rounded-[2px] bg-gray-200" /> Meta
         </div>
         <div className="flex items-center gap-1.5 text-xs text-gray-600">
-          <div className="w-2.5 h-2.5 rounded-[2px] bg-black" /> Realizado
+          <div className="w-2.5 h-2.5 rounded-[2px] bg-accent" /> Realizado
         </div>
       </div>
     </div>

@@ -14,23 +14,24 @@ export default function ComentariosPage() {
   const { brokers, selectedBrokerId, setSelectedBrokerId } = useBrokerSelector();
   const { toast, showToast } = useToast();
   const [month, setMonth] = useState(0);
+  const [year, setYear] = useState(CURRENT_YEAR);
   const [texto, setTexto] = useState('');
   const [history, setHistory] = useState<Comentario[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!selectedBrokerId) return;
-    comentariosService.getByBrokerAndMonth(selectedBrokerId, month, CURRENT_YEAR).then(c => {
+    comentariosService.getByBrokerAndMonth(selectedBrokerId, month, year).then(c => {
       setTexto(c?.texto || '');
     });
     comentariosService.getByBroker(selectedBrokerId).then(setHistory);
-  }, [selectedBrokerId, month]);
+  }, [selectedBrokerId, month, year]);
 
   const handleSave = async () => {
     if (!texto.trim()) { showToast('Escreva um comentário'); return; }
     setLoading(true);
     try {
-      await comentariosService.upsert(selectedBrokerId, month, CURRENT_YEAR, texto);
+      await comentariosService.upsert(selectedBrokerId, month, year, texto);
       showToast('Comentário salvo');
       comentariosService.getByBroker(selectedBrokerId).then(setHistory);
     } catch { showToast('Erro ao salvar'); }
@@ -49,6 +50,11 @@ export default function ComentariosPage() {
         </select>
         <select value={month} onChange={e => setMonth(Number(e.target.value))} className="px-4 py-2.5 bg-white border border-gray-200 rounded-sm font-main text-sm outline-none cursor-pointer">
           {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
+        </select>
+        <select value={year} onChange={e => setYear(Number(e.target.value))} className="px-4 py-2.5 bg-white border border-gray-200 rounded-sm font-main text-sm outline-none cursor-pointer">
+          {Array.from({ length: CURRENT_YEAR - 2024 }, (_, i) => CURRENT_YEAR - i).map(y => (
+            <option key={y} value={y}>{y}</option>
+          ))}
         </select>
       </div>
 

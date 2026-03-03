@@ -13,16 +13,17 @@ import { RankingItem as RankingItemType } from '../types';
 
 export default function RankingPage() {
   const [month, setMonth] = useState(0);
+  const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<RankingItemType[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    dashboardService.ranking(month, CURRENT_YEAR)
+    dashboardService.ranking(month, year)
       .then(setData)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [month]);
+  }, [month, year]);
 
   const totalVGV = data.reduce((s, r) => s + r.vgvRealizado, 0);
   const totalCaptacoes = data.reduce((s, r) => s + r.captacoes, 0);
@@ -31,7 +32,7 @@ export default function RankingPage() {
   return (
     <div>
       <PageHeader title="Ranking de Performance" description="Comparativo entre corretores" />
-      <MonthTabs activeMonth={month} onSelect={setMonth} />
+      <MonthTabs activeMonth={month} onSelect={setMonth} activeYear={year} onYearChange={setYear} />
 
       {loading ? <div className="text-center py-16 text-gray-400">Carregando...</div> : (
         <>
