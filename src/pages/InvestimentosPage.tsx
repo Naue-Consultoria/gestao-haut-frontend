@@ -10,6 +10,7 @@ import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
 import { FormGroup } from '../components/ui/FormGroup';
 import { FormRow } from '../components/ui/FormRow';
+import { CurrencyInput } from '../components/ui/CurrencyInput';
 import { Toast } from '../components/ui/Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
@@ -99,7 +100,7 @@ export default function InvestimentosPage() {
           <FormGroup label="Produto / Descrição"><input type="text" value={produto} onChange={e => setProduto(e.target.value)} placeholder="Descrição" className={inputClass} /></FormGroup>
         </FormRow>
         <FormRow>
-          <FormGroup label="Valor Investido (R$)"><input type="number" value={valor} onChange={e => setValor(e.target.value)} placeholder="0,00" className={inputClass} /></FormGroup>
+          <FormGroup label="Valor Investido (R$)"><CurrencyInput value={valor} onChange={setValor} className={inputClass} /></FormGroup>
           <FormGroup label="Leads Gerados"><input type="number" value={leads} onChange={e => setLeads(e.target.value)} placeholder="0" className={inputClass} /></FormGroup>
         </FormRow>
         <div className="flex gap-3 justify-end mt-6"><Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button><Button onClick={handleSave}>Salvar</Button></div>

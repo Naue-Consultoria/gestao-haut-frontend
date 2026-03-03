@@ -51,7 +51,7 @@ export default function AlterarSenhaPage() {
         <div className="flex justify-center mb-2">
           <img src="/logo_haut_branca.png" alt="HAUT" className="h-28" />
         </div>
-        <div className="font-mono text-[11px] text-gray-500 text-center tracking-[3px] uppercase mb-12">Alterar Senha</div>
+        <div className="text-[13px] text-gray-500 text-center tracking-[6px] uppercase mb-12" style={{ fontFamily: "'Mendl Sans Dawn', sans-serif", fontWeight: 300 }}>Alterar Senha</div>
 
         {user && (
           <div className="text-center mb-8">

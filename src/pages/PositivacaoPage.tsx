@@ -10,6 +10,7 @@ import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
 import { FormGroup } from '../components/ui/FormGroup';
 import { FormRow } from '../components/ui/FormRow';
+import { CurrencyInput } from '../components/ui/CurrencyInput';
 import { Toast } from '../components/ui/Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
@@ -126,11 +127,11 @@ export default function PositivacaoPage() {
             </select>
           </FormGroup>
           <FormGroup label="VGV Líquido (R$)">
-            <input type="number" value={vgv} onChange={e => setVgv(e.target.value)} placeholder="0,00" className={inputClass} />
+            <CurrencyInput value={vgv} onChange={setVgv} className={inputClass} />
           </FormGroup>
         </FormRow>
         <FormGroup label="Comissão Corretor (R$)">
-          <input type="number" value={comissao} onChange={e => setComissao(e.target.value)} placeholder="0,00" className={inputClass} />
+          <CurrencyInput value={comissao} onChange={setComissao} className={inputClass} />
         </FormGroup>
         <div className="flex gap-3 justify-end mt-6">
           <Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>

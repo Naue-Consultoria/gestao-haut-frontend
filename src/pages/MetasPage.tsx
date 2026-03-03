@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { BrokerSelect } from '../components/ui/BrokerSelect';
 import { FormGroup } from '../components/ui/FormGroup';
+import { CurrencyInput } from '../components/ui/CurrencyInput';
 import { Button } from '../components/ui/Button';
 import { Toast } from '../components/ui/Toast';
 import { useBrokerSelector } from '../hooks/useBrokerSelector';
@@ -85,13 +86,13 @@ export default function MetasPage() {
       <div className="bg-white border border-gray-200 rounded-[12px] p-8 mb-6">
         <div className="text-[15px] font-semibold tracking-tight mb-4">Metas de Performance</div>
         <div className="grid grid-cols-2 gap-3 max-md:grid-cols-1">
-          <FormGroup label="Meta VGV Líquido Anual (R$)"><input type="number" value={vgvAnual} onChange={e => setVgvAnual(e.target.value)} placeholder="0,00" className={inputClass} /></FormGroup>
-          <FormGroup label="Meta VGV Líquido Mensal (R$)"><input type="number" value={vgvMensal} onChange={e => setVgvMensal(e.target.value)} placeholder="0,00" className={inputClass} /></FormGroup>
+          <FormGroup label="Meta VGV Líquido Anual (R$)"><CurrencyInput value={vgvAnual} onChange={setVgvAnual} className={inputClass} /></FormGroup>
+          <FormGroup label="Meta VGV Líquido Mensal (R$)"><CurrencyInput value={vgvMensal} onChange={setVgvMensal} className={inputClass} /></FormGroup>
           <FormGroup label="Meta Captações no Mês"><input type="number" value={captacoes} onChange={e => setCaptacoes(e.target.value)} placeholder="0" className={inputClass} /></FormGroup>
           <FormGroup label="Meta Captações Exclusivas"><input type="number" value={captExclusivas} onChange={e => setCaptExclusivas(e.target.value)} placeholder="0" className={inputClass} /></FormGroup>
-          <FormGroup label="Meta Negócios Levantados (R$)"><input type="number" value={negocios} onChange={e => setNegocios(e.target.value)} placeholder="0,00" className={inputClass} /></FormGroup>
+          <FormGroup label="Meta Negócios Levantados (R$)"><CurrencyInput value={negocios} onChange={setNegocios} className={inputClass} /></FormGroup>
           <FormGroup label="Meta Horas Treinamento"><input type="number" value={treinamento} onChange={e => setTreinamento(e.target.value)} placeholder="0" className={inputClass} /></FormGroup>
-          <FormGroup label="Meta Investimento (R$)"><input type="number" value={investimento} onChange={e => setInvestimento(e.target.value)} placeholder="0,00" className={inputClass} /></FormGroup>
+          <FormGroup label="Meta Investimento (R$)"><CurrencyInput value={investimento} onChange={setInvestimento} className={inputClass} /></FormGroup>
           <FormGroup label="Taxa Positivação (%)"><input type="number" value={positivacao} onChange={e => setPositivacao(e.target.value)} placeholder="0" step="0.1" className={inputClass} /></FormGroup>
         </div>
         <Button onClick={handleSave} disabled={loading} className="mt-4">{loading ? 'Salvando...' : 'Salvar Metas'}</Button>

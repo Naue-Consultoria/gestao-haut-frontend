@@ -83,9 +83,9 @@ export function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: Sideba
 
       {/* Header */}
       <div className={`border-b border-white/[0.06] flex flex-col items-center ${collapsed ? 'px-3 pt-5 pb-4' : 'px-6 pt-6 pb-5'}`}>
-        <img src="/logo_haut_branca.png" alt="HAUT" className={`transition-all duration-300 ${collapsed ? 'h-7' : 'h-12'}`} />
+        <img src="/logo_haut_branca_login.png" alt="HAUT" className={`transition-all duration-300 ${collapsed ? 'h-7' : 'h-12'}`} />
         {!collapsed && (
-          <div className="font-mono text-[9px] text-gray-500 tracking-widest uppercase mt-2">Diário de Bordo</div>
+          <div className="text-[9px] text-gray-500 tracking-[3px] uppercase mt-2" style={{ fontFamily: "'Mendl Sans Dawn', sans-serif", fontWeight: 300 }}>Diário de Bordo</div>
         )}
       </div>
 

@@ -10,6 +10,7 @@ import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
 import { FormGroup } from '../components/ui/FormGroup';
 import { FormRow } from '../components/ui/FormRow';
+import { CurrencyInput } from '../components/ui/CurrencyInput';
 import { Toast } from '../components/ui/Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
@@ -93,7 +94,7 @@ export default function NegociosPage() {
         <FormGroup label="Oportunidade / Descrição"><input type="text" value={oportunidade} onChange={e => setOportunidade(e.target.value)} placeholder="Descrição da oportunidade" className={inputClass} /></FormGroup>
         <FormRow>
           <FormGroup label="Origem"><select value={origem} onChange={e => setOrigem(e.target.value)} className={inputClass}>{ORIGENS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></FormGroup>
-          <FormGroup label="VGV Bruto (R$)"><input type="number" value={vgv} onChange={e => setVgv(e.target.value)} placeholder="0,00" className={inputClass} /></FormGroup>
+          <FormGroup label="VGV Bruto (R$)"><CurrencyInput value={vgv} onChange={setVgv} className={inputClass} /></FormGroup>
         </FormRow>
         <div className="flex gap-3 justify-end mt-6"><Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button><Button onClick={handleSave}>Salvar</Button></div>
       </Modal>
