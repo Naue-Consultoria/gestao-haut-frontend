@@ -61,7 +61,9 @@ export default function LoginPage() {
       }} />
 
       <div className="relative z-10 w-full max-w-[420px] px-12">
-        <div className="font-main text-[32px] font-bold tracking-[12px] text-white text-center mb-2">HAUT</div>
+        <div className="flex justify-center mb-2">
+          <img src="/logo_haut_branca.png" alt="HAUT" className="h-28" />
+        </div>
         <div className="font-mono text-[11px] text-gray-500 text-center tracking-[3px] uppercase mb-12">Diário de Bordo</div>
 
         {!isRegister ? (

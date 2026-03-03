@@ -82,12 +82,10 @@ export function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: Sideba
       </button>
 
       {/* Header */}
-      <div className={`border-b border-white/[0.06] ${collapsed ? 'px-3 pt-8 pb-6' : 'px-6 pt-8 pb-6'}`}>
-        <div className={`font-bold tracking-[8px] ${collapsed ? 'text-[15px] text-center tracking-[4px]' : 'text-[22px]'}`}>
-          {collapsed ? 'H' : 'HAUT'}
-        </div>
+      <div className={`border-b border-white/[0.06] flex flex-col items-center ${collapsed ? 'px-3 pt-5 pb-4' : 'px-6 pt-6 pb-5'}`}>
+        <img src="/logo_haut_branca.png" alt="HAUT" className={`transition-all duration-300 ${collapsed ? 'h-7' : 'h-12'}`} />
         {!collapsed && (
-          <div className="font-mono text-[9px] text-gray-500 tracking-widest uppercase mt-1">Diário de Bordo</div>
+          <div className="font-mono text-[9px] text-gray-500 tracking-widest uppercase mt-2">Diário de Bordo</div>
         )}
       </div>
 
