@@ -17,4 +17,16 @@ export const profilesService = {
   delete: (id: string) => api.delete(`/profiles/${id}`),
   resetPassword: (id: string, password: string) =>
     api.post(`/profiles/${id}/reset-password`, { password }),
+  uploadAvatar: async (id: string, file: File): Promise<User> => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const res = await api.post(`/profiles/${id}/avatar`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data.data;
+  },
+  removeAvatar: async (id: string): Promise<User> => {
+    const res = await api.delete(`/profiles/${id}/avatar`);
+    return res.data.data;
+  },
 };

@@ -10,6 +10,7 @@ export interface User {
   role: UserRole;
   active: boolean;
   must_change_password: boolean;
+  avatar_url?: string | null;
 }
 
 export interface Meta {

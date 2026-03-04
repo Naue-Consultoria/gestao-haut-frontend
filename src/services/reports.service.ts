@@ -1,7 +1,7 @@
 import api from '../config/api';
 
 export interface ReportData {
-  broker: { name: string; team: string };
+  broker: { name: string; team: string; avatar_url?: string | null };
   meta: {
     vgv_anual: number;
     vgv_mensal: number;
@@ -31,6 +31,7 @@ export interface ReportData {
   treinamentos: { atividade: string; local: string; horas: number }[];
   investimentos: { tipo: string; produto: string; valor: number; leads: number }[];
   comentario: { texto: string; gestorName: string } | null;
+  planosAcao: { texto: string; prazo: string; status: string }[];
   monthlyVgv: number[];
   monthlyMeta: number[];
 }

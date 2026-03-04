@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Plus, Pencil, Trash2, KeyRound, RefreshCw } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Plus, Pencil, Trash2, KeyRound, RefreshCw, Camera, X } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { DataSection } from '../components/ui/DataSection';
 import { Modal } from '../components/ui/Modal';
@@ -8,6 +8,7 @@ import { FormGroup } from '../components/ui/FormGroup';
 import { FormRow } from '../components/ui/FormRow';
 import { Tag } from '../components/ui/Tag';
 import { Toast } from '../components/ui/Toast';
+import { Avatar } from '../components/ui/Avatar';
 import { useToast } from '../hooks/useToast';
 import { profilesService } from '../services/profiles.service';
 import { User } from '../types';
@@ -25,6 +26,9 @@ export default function UsuariosPage() {
   const [password, setPassword] = useState('');
   const [team, setTeam] = useState('');
   const [role, setRole] = useState('corretor');
+  const [createAvatarFile, setCreateAvatarFile] = useState<File | null>(null);
+  const [createAvatarPreview, setCreateAvatarPreview] = useState<string | null>(null);
+  const createAvatarInputRef = useRef<HTMLInputElement>(null);
 
   const [resetTarget, setResetTarget] = useState<User | null>(null);
   const [resetPassword, setResetPassword] = useState('');
@@ -34,6 +38,10 @@ export default function UsuariosPage() {
   const [editTeam, setEditTeam] = useState('');
   const [editRole, setEditRole] = useState('corretor');
   const [editActive, setEditActive] = useState(true);
+  const [editAvatarPreview, setEditAvatarPreview] = useState<string | null>(null);
+  const [editAvatarFile, setEditAvatarFile] = useState<File | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -42,11 +50,23 @@ export default function UsuariosPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const handleCreateAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCreateAvatarFile(file);
+    setCreateAvatarPreview(URL.createObjectURL(file));
+  };
+
   const handleCreate = async () => {
     if (!name || !email || password.length < 6) { showToast('Preencha todos os campos'); return; }
     try {
-      await profilesService.create({ name, email, password, team, role });
+      const res = await profilesService.create({ name, email, password, team, role });
+      const newUserId = res.data?.data?.id;
+      if (createAvatarFile && newUserId) {
+        await profilesService.uploadAvatar(newUserId, createAvatarFile);
+      }
       setModalOpen(false); setName(''); setEmail(''); setPassword(''); setTeam(''); setRole('corretor');
+      setCreateAvatarFile(null); setCreateAvatarPreview(null);
       showToast('Usuário criado'); load();
     } catch { showToast('Erro ao criar usuário'); }
   };
@@ -57,13 +77,38 @@ export default function UsuariosPage() {
     setEditTeam(u.team);
     setEditRole(u.role);
     setEditActive(u.active);
+    setEditAvatarPreview(u.avatar_url || null);
+    setEditAvatarFile(null);
     setEditModalOpen(true);
+  };
+
+  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEditAvatarFile(file);
+    setEditAvatarPreview(URL.createObjectURL(file));
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!editUser) return;
+    setAvatarUploading(true);
+    try {
+      await profilesService.removeAvatar(editUser.id);
+      setEditAvatarPreview(null);
+      setEditAvatarFile(null);
+      showToast('Foto removida');
+      load();
+    } catch { showToast('Erro ao remover foto'); }
+    setAvatarUploading(false);
   };
 
   const handleEdit = async () => {
     if (!editUser || !editName) { showToast('Nome é obrigatório'); return; }
     try {
       await profilesService.update(editUser.id, { name: editName, team: editTeam, role: editRole as User['role'], active: editActive });
+      if (editAvatarFile) {
+        await profilesService.uploadAvatar(editUser.id, editAvatarFile);
+      }
       setEditModalOpen(false);
       showToast('Usuário atualizado'); load();
     } catch { showToast('Erro ao atualizar'); }
@@ -114,7 +159,12 @@ export default function UsuariosPage() {
             <tbody>
               {users.map(u => (
                 <tr key={u.id} className="hover:bg-gray-50 group">
-                  <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700 font-semibold">{u.name}</td>
+                  <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700 font-semibold">
+                    <div className="flex items-center gap-3">
+                      <Avatar src={u.avatar_url} name={u.name} size="sm" />
+                      {u.name}
+                    </div>
+                  </td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{u.email}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100"><Tag variant="light">{u.team}</Tag></td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100"><Tag variant="dark">{u.role === 'gestor' ? 'Gestor' : 'Corretor'}</Tag></td>
@@ -141,6 +191,36 @@ export default function UsuariosPage() {
 
       {/* Modal Criar */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Novo Usuário">
+        <input type="file" ref={createAvatarInputRef} accept="image/*" className="hidden" onChange={handleCreateAvatarSelect} />
+        <FormGroup label="Foto de Perfil">
+          <div
+            onClick={() => createAvatarInputRef.current?.click()}
+            className="flex items-center gap-4 px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm cursor-pointer transition-all hover:border-gray-400 hover:bg-white"
+          >
+            {createAvatarPreview ? (
+              <img src={createAvatarPreview} alt="Preview" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                <Camera size={16} className="text-gray-400" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <span className="text-sm text-gray-500">
+                {createAvatarPreview ? 'Foto selecionada' : 'Clique para selecionar uma foto'}
+              </span>
+            </div>
+            {createAvatarPreview && (
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); setCreateAvatarFile(null); setCreateAvatarPreview(null); }}
+                className="p-1 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
+                title="Remover foto"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+        </FormGroup>
         <FormGroup label="Nome Completo"><input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Nome Sobrenome" className={inputClass} /></FormGroup>
         <FormGroup label="E-mail"><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@exemplo.com" className={inputClass} /></FormGroup>
         <FormGroup label="Senha Inicial"><input type="text" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" className={inputClass} /></FormGroup>
@@ -153,6 +233,37 @@ export default function UsuariosPage() {
 
       {/* Modal Editar */}
       <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} title="Editar Usuário">
+        <input type="file" ref={avatarInputRef} accept="image/*" className="hidden" onChange={handleAvatarSelect} />
+        <FormGroup label="Foto de Perfil">
+          <div
+            onClick={() => !avatarUploading && avatarInputRef.current?.click()}
+            className={`flex items-center gap-4 px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm transition-all ${avatarUploading ? 'opacity-50' : 'cursor-pointer hover:border-gray-400 hover:bg-white'}`}
+          >
+            {editAvatarPreview ? (
+              <img src={editAvatarPreview} alt="Preview" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                <Camera size={16} className="text-gray-400" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <span className="text-sm text-gray-500">
+                {editAvatarPreview ? 'Clique para trocar a foto' : 'Clique para selecionar uma foto'}
+              </span>
+            </div>
+            {editAvatarPreview && (
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); handleRemoveAvatar(); }}
+                className="p-1 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
+                title="Remover foto"
+                disabled={avatarUploading}
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+        </FormGroup>
         <FormGroup label="Nome Completo"><input type="text" value={editName} onChange={e => setEditName(e.target.value)} className={inputClass} /></FormGroup>
         <FormRow>
           <FormGroup label="Equipe"><input type="text" value={editTeam} onChange={e => setEditTeam(e.target.value)} className={inputClass} /></FormGroup>

@@ -1,10 +1,12 @@
+import { useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutGrid, User, Activity, Search, Layers, BookOpen, DollarSign,
-  BarChart3, Target, MessageSquare, ClipboardList, Users, FileText, LogOut, ChevronsLeft, ChevronsRight
+  BarChart3, Target, MessageSquare, ClipboardList, Users, FileText, LogOut, ChevronsLeft, ChevronsRight, Camera
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { getInitials } from '../../utils/helpers';
+import { Avatar } from '../ui/Avatar';
+import { profilesService } from '../../services/profiles.service';
 
 const mainNav = [
   { path: '/dashboard', label: 'Painel Geral', icon: LayoutGrid },
@@ -36,9 +38,22 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: SidebarProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    try {
+      await profilesService.uploadAvatar(user.id, file);
+      await refreshUser();
+    } catch {
+      console.error('Erro ao fazer upload do avatar');
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleNav = (path: string) => {
     navigate(path);
@@ -108,11 +123,19 @@ export function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: Sideba
       </div>
 
       {/* User section */}
+      <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleAvatarUpload} />
       <div className={`py-4 border-t border-white/[0.06] ${collapsed ? 'px-3' : 'px-5'}`}>
         {collapsed ? (
           <div className="flex flex-col items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center text-sm font-semibold text-white" title={user?.name}>
-              {user ? getInitials(user.name) : '?'}
+            <div
+              className="relative group cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
+              title="Alterar foto"
+            >
+              <Avatar src={user?.avatar_url} name={user?.name || '?'} size="md" />
+              <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Camera size={14} className="text-white" />
+              </div>
             </div>
             <button
               onClick={logout}
@@ -125,8 +148,15 @@ export function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: Sideba
         ) : (
           <>
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center text-sm font-semibold text-white">
-                {user ? getInitials(user.name) : '?'}
+              <div
+                className="relative group cursor-pointer flex-shrink-0"
+                onClick={() => fileInputRef.current?.click()}
+                title="Alterar foto"
+              >
+                <Avatar src={user?.avatar_url} name={user?.name || '?'} size="md" />
+                <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Camera size={14} className="text-white" />
+                </div>
               </div>
               <div className="min-w-0">
                 <div className="text-[13px] font-medium truncate">{user?.name}</div>
