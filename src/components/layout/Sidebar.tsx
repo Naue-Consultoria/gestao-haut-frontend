@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutGrid, User, Activity, Search, Layers, BookOpen, DollarSign,
-  BarChart3, Target, MessageSquare, Users, FileText, LogOut, ChevronsLeft, ChevronsRight
+  BarChart3, Target, MessageSquare, ClipboardList, Users, FileText, LogOut, ChevronsLeft, ChevronsRight
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getInitials } from '../../utils/helpers';
@@ -23,6 +23,7 @@ const gestorNav = [
   { path: '/ranking', label: 'Ranking', icon: BarChart3 },
   { path: '/metas', label: 'Definir Metas', icon: Target },
   { path: '/comentarios', label: 'Comentários', icon: MessageSquare },
+  { path: '/planos-acao', label: 'Plano de Ação', icon: ClipboardList },
   { path: '/usuarios', label: 'Usuários', icon: Users },
   { path: '/relatorios', label: 'Relatórios', icon: FileText },
 ];

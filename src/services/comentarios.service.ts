@@ -12,4 +12,5 @@ export const comentariosService = {
   },
   upsert: (brokerId: string, month: number, year: number, texto: string) =>
     api.put(`/comentarios/${brokerId}/${month}`, { texto }, { params: { year } }),
+  delete: (id: string) => api.delete(`/comentarios/${id}`),
 };

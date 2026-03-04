@@ -23,4 +23,10 @@ export const INVESTIMENTO_TIPOS: { value: string; label: string }[] = [
   { value: 'OUTRO', label: 'Outro' },
 ];
 
+export const PLANO_STATUS: { value: string; label: string }[] = [
+  { value: 'PLANEJADO', label: 'Planejado' },
+  { value: 'EM_ANDAMENTO', label: 'Em andamento' },
+  { value: 'CONCLUIDO', label: 'Concluído' },
+];
+
 export const CURRENT_YEAR = 2026;

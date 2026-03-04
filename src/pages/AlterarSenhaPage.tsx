@@ -7,7 +7,7 @@ import { useToast } from '../hooks/useToast';
 import api from '../config/api';
 
 export default function AlterarSenhaPage() {
-  const { user, refreshUser, logout } = useAuth();
+  const { user, login, logout } = useAuth();
   const navigate = useNavigate();
   const { toast, showToast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -30,7 +30,7 @@ export default function AlterarSenhaPage() {
     setLoading(true);
     try {
       await api.post('/auth/change-password', { newPassword });
-      await refreshUser();
+      await login(user!.email, newPassword);
       navigate('/dashboard', { replace: true });
     } catch {
       showToast('Erro ao alterar senha. Tente novamente.');

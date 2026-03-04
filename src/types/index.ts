@@ -90,6 +90,21 @@ export interface Comentario {
   gestor?: { name: string };
 }
 
+export type PlanoStatus = 'PLANEJADO' | 'EM_ANDAMENTO' | 'CONCLUIDO';
+
+export interface PlanoAcao {
+  id: string;
+  broker_id: string;
+  gestor_id: string;
+  month: number;
+  year: number;
+  texto: string;
+  prazo: string;
+  status: PlanoStatus;
+  created_at: string;
+  gestor?: { name: string };
+}
+
 export interface BrokerSummary {
   id: string;
   name: string;

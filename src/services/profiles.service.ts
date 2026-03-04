@@ -14,4 +14,7 @@ export const profilesService = {
     api.post('/profiles', data),
   update: (id: string, data: Partial<User>) =>
     api.put(`/profiles/${id}`, data),
+  delete: (id: string) => api.delete(`/profiles/${id}`),
+  resetPassword: (id: string, password: string) =>
+    api.post(`/profiles/${id}/reset-password`, { password }),
 };

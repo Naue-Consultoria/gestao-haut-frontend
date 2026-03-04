@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '../components/ui/PageHeader';
-import { CommentBox } from '../components/ui/CommentBox';
 import { FormGroup } from '../components/ui/FormGroup';
 import { Button } from '../components/ui/Button';
 import { Toast } from '../components/ui/Toast';
@@ -9,6 +8,8 @@ import { useToast } from '../hooks/useToast';
 import { comentariosService } from '../services/comentarios.service';
 import { MONTHS, CURRENT_YEAR } from '../config/constants';
 import { Comentario } from '../types';
+import { Modal } from '../components/ui/Modal';
+import { Pencil, Trash2 } from 'lucide-react';
 
 export default function ComentariosPage() {
   const { brokers, selectedBrokerId, setSelectedBrokerId } = useBrokerSelector();
@@ -18,14 +19,21 @@ export default function ComentariosPage() {
   const [texto, setTexto] = useState('');
   const [history, setHistory] = useState<Comentario[]>([]);
   const [loading, setLoading] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Comentario | null>(null);
 
   useEffect(() => {
     if (!selectedBrokerId) return;
     comentariosService.getByBrokerAndMonth(selectedBrokerId, month, year).then(c => {
       setTexto(c?.texto || '');
+      setEditingId(null);
     });
     comentariosService.getByBroker(selectedBrokerId).then(setHistory);
   }, [selectedBrokerId, month, year]);
+
+  const refreshHistory = () => {
+    comentariosService.getByBroker(selectedBrokerId).then(setHistory);
+  };
 
   const handleSave = async () => {
     if (!texto.trim()) { showToast('Escreva um comentário'); return; }
@@ -33,9 +41,39 @@ export default function ComentariosPage() {
     try {
       await comentariosService.upsert(selectedBrokerId, month, year, texto);
       showToast('Comentário salvo');
-      comentariosService.getByBroker(selectedBrokerId).then(setHistory);
+      setEditingId(null);
+      refreshHistory();
     } catch { showToast('Erro ao salvar'); }
     setLoading(false);
+  };
+
+  const handleEdit = (c: Comentario) => {
+    setMonth(c.month);
+    setYear(c.year);
+    setTexto(c.texto);
+    setEditingId(c.id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await comentariosService.delete(deleteTarget.id);
+      showToast('Comentário excluído');
+      if (editingId === deleteTarget.id) {
+        setTexto('');
+        setEditingId(null);
+      }
+      refreshHistory();
+    } catch { showToast('Erro ao excluir'); }
+    setDeleteTarget(null);
+  };
+
+  const handleCancel = () => {
+    setEditingId(null);
+    comentariosService.getByBrokerAndMonth(selectedBrokerId, month, year).then(c => {
+      setTexto(c?.texto || '');
+    });
   };
 
   const inputClass = 'w-full px-4 py-3 bg-gray-50 border border-gray-200 text-black rounded-sm font-main text-sm outline-none transition-all focus:border-gray-400 focus:bg-white min-h-[100px] resize-y';
@@ -59,15 +97,51 @@ export default function ComentariosPage() {
       </div>
 
       <div className="bg-white border border-gray-200 rounded-[12px] p-8 mb-6">
-        <FormGroup label="Comentário do Diretor / Gente e Gestão">
+        <FormGroup label={editingId ? `Editando comentário — ${MONTHS[month]} ${year}` : 'Comentário do Diretor / Gente e Gestão'}>
           <textarea value={texto} onChange={e => setTexto(e.target.value)} placeholder="Escreva seu feedback sobre a performance do corretor neste mês..." className={inputClass} />
         </FormGroup>
-        <Button onClick={handleSave} disabled={loading}>{loading ? 'Salvando...' : 'Salvar Comentário'}</Button>
+        <div className="flex gap-3">
+          <Button onClick={handleSave} disabled={loading}>{loading ? 'Salvando...' : 'Salvar Comentário'}</Button>
+          {editingId && (
+            <button onClick={handleCancel} className="px-4 py-2 text-sm font-main text-gray-500 hover:text-gray-700 transition-colors">
+              Cancelar edição
+            </button>
+          )}
+        </div>
       </div>
 
       {history.filter(c => c.texto).map(c => (
-        <CommentBox key={c.id} author={`${MONTHS[c.month]} ${c.year} — ${c.gestor?.name || 'Gestor'}`} text={c.texto} />
+        <div key={c.id} className="group bg-gray-50 border-l-[3px] border-l-black py-5 px-6 rounded-r-sm mx-6 mb-6 relative">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">
+              {MONTHS[c.month]} {c.year} — {c.gestor?.name || 'Gestor'}
+            </div>
+            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onClick={() => handleEdit(c)} className="p-1.5 text-gray-400 hover:text-gray-700 transition-colors" title="Editar">
+                <Pencil size={14} />
+              </button>
+              <button onClick={() => setDeleteTarget(c)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors" title="Excluir">
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </div>
+          <div className="text-sm leading-relaxed text-gray-700">{c.texto}</div>
+        </div>
       ))}
+
+      <Modal isOpen={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Excluir comentário">
+        <p className="text-sm text-gray-600 mb-6">
+          Tem certeza que deseja excluir o comentário de <strong>{deleteTarget && `${MONTHS[deleteTarget.month]} ${deleteTarget.year}`}</strong>? Esta ação não pode ser desfeita.
+        </p>
+        <div className="flex justify-end gap-3">
+          <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 text-sm font-main text-gray-500 hover:text-gray-700 transition-colors">
+            Cancelar
+          </button>
+          <button onClick={confirmDelete} className="px-4 py-2 text-sm font-main bg-red-500 text-white rounded-sm hover:bg-red-600 transition-colors">
+            Excluir
+          </button>
+        </div>
+      </Modal>
 
       <Toast message={toast.message} isVisible={toast.visible} />
     </div>

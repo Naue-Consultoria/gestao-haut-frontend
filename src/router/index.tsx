@@ -14,6 +14,7 @@ import InvestimentosPage from '../pages/InvestimentosPage';
 import RankingPage from '../pages/RankingPage';
 import MetasPage from '../pages/MetasPage';
 import ComentariosPage from '../pages/ComentariosPage';
+import PlanosAcaoPage from '../pages/PlanosAcaoPage';
 import UsuariosPage from '../pages/UsuariosPage';
 import RelatoriosPage from '../pages/RelatoriosPage';
 import RelatorioPreviewPage from '../pages/RelatorioPreviewPage';
@@ -37,6 +38,7 @@ export function AppRouter() {
           <Route path="ranking" element={<GestorRoute><RankingPage /></GestorRoute>} />
           <Route path="metas" element={<GestorRoute><MetasPage /></GestorRoute>} />
           <Route path="comentarios" element={<GestorRoute><ComentariosPage /></GestorRoute>} />
+          <Route path="planos-acao" element={<GestorRoute><PlanosAcaoPage /></GestorRoute>} />
           <Route path="usuarios" element={<GestorRoute><UsuariosPage /></GestorRoute>} />
           <Route path="relatorios" element={<GestorRoute><RelatoriosPage /></GestorRoute>} />
         </Route>
