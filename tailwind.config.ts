@@ -7,7 +7,7 @@ export default {
       colors: {
         black: '#0a0a0a',
         white: '#ffffff',
-        accent: '#B57170',
+        accent: '#a41925',
         positive: '#22c55e',
         negative: '#ef4444',
         warning: '#f59e0b',
