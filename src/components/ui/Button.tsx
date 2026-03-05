@@ -12,7 +12,7 @@ export function Button({ variant = 'dark', size = 'md', icon, children, classNam
     dark: 'bg-accent text-white border-none rounded-sm hover:brightness-110 hover:-translate-y-px uppercase tracking-wider text-[13px]',
     outline: 'bg-transparent text-black border border-gray-300 rounded-sm hover:border-black text-[13px]',
     primary: 'w-full bg-white text-black border-none rounded-sm font-semibold uppercase tracking-widest text-sm hover:-translate-y-px hover:shadow-lg',
-    icon: 'w-9 h-9 bg-transparent border border-gray-200 rounded-sm text-gray-500 hover:border-gray-400 hover:text-black',
+    icon: 'w-10 h-10 bg-transparent border border-gray-200 rounded-sm text-gray-500 hover:border-gray-400 hover:text-black',
   };
   const sizes = {
     sm: 'px-4 py-2 text-xs',

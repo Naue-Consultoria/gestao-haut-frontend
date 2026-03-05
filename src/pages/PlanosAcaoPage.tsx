@@ -130,7 +130,7 @@ export default function PlanosAcaoPage() {
                   </td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100">
                     <button onClick={() => handleDelete(p.id)} className="p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer">
-                      <Trash2 size={16} />
+                      <Trash2 size={18} />
                     </button>
                   </td>
                 </tr>

@@ -86,7 +86,7 @@ export default function InvestimentosPage() {
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{row.produto}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{fmt(row.valor)}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{row.leads}</td>
-                  <td className="px-6 py-3.5 text-sm border-b border-gray-100"><Button variant="icon" size="sm" onClick={() => handleDelete(row.id)}><Trash2 size={14} /></Button></td>
+                  <td className="px-6 py-3.5 text-sm border-b border-gray-100"><Button variant="icon" size="sm" onClick={() => handleDelete(row.id)}><Trash2 size={18} /></Button></td>
                 </tr>
               ))}
             </tbody>

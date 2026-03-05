@@ -117,11 +117,11 @@ export default function ComentariosPage() {
               {MONTHS[c.month]} {c.year} — {c.gestor?.name || 'Gestor'}
             </div>
             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={() => handleEdit(c)} className="p-1.5 text-gray-400 hover:text-gray-700 transition-colors" title="Editar">
-                <Pencil size={14} />
+              <button onClick={() => handleEdit(c)} className="p-2 text-gray-400 hover:text-gray-700 transition-colors" title="Editar">
+                <Pencil size={18} />
               </button>
-              <button onClick={() => setDeleteTarget(c)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors" title="Excluir">
-                <Trash2 size={14} />
+              <button onClick={() => setDeleteTarget(c)} className="p-2 text-gray-400 hover:text-red-500 transition-colors" title="Excluir">
+                <Trash2 size={18} />
               </button>
             </div>
           </div>
