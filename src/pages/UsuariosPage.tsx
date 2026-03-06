@@ -167,7 +167,13 @@ export default function UsuariosPage() {
                   </td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{u.email}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100"><Tag variant="light">{u.team}</Tag></td>
-                  <td className="px-6 py-3.5 text-sm border-b border-gray-100"><Tag variant="dark">{u.role === 'gestor' ? 'Gestor' : 'Corretor'}</Tag></td>
+                  <td className="px-6 py-3.5 text-sm border-b border-gray-100">
+                    {u.role === 'gestor' ? (
+                      <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#800020] text-white">Gestor</span>
+                    ) : (
+                      <Tag variant="dark">Corretor</Tag>
+                    )}
+                  </td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100"><Tag variant={u.active ? 'success' : 'warning'}>{u.active ? 'Ativo' : 'Inativo'}</Tag></td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100">
                     <div className="flex gap-2 justify-end">
