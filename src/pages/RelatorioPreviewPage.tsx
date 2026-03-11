@@ -10,7 +10,8 @@ export default function RelatorioPreviewPage() {
   const [searchParams] = useSearchParams();
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const brokerId = searchParams.get('brokerId') || '';
+  const id = searchParams.get('id') || searchParams.get('brokerId') || '';
+  const type = searchParams.get('type') || 'broker';
   const month = Number(searchParams.get('month') || 0);
   const year = Number(searchParams.get('year') || 2026);
 
@@ -20,15 +21,20 @@ export default function RelatorioPreviewPage() {
   const [html, setHtml] = useState('');
 
   useEffect(() => {
-    if (!brokerId) { setError('Corretor não encontrado'); setLoading(false); return; }
-    reportsService.getBrokerReport(brokerId, month, year)
+    if (!id) { setError('ID não encontrado'); setLoading(false); return; }
+
+    const fetchReport = type === 'parceria'
+      ? reportsService.getParceriaReport(id, month, year)
+      : reportsService.getBrokerReport(id, month, year);
+
+    fetchReport
       .then(d => {
         setData(d);
         setHtml(buildReportHtml(d, month, year));
       })
       .catch(() => setError('Erro ao carregar relatório'))
       .finally(() => setLoading(false));
-  }, [brokerId, month, year]);
+  }, [id, type, month, year]);
 
   const handlePrint = () => {
     iframeRef.current?.contentWindow?.print();

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { MonthTabs } from '../components/ui/MonthTabs';
-import { BrokerSelect } from '../components/ui/BrokerSelect';
 import { StatsGrid } from '../components/ui/StatsGrid';
 import { StatCard } from '../components/ui/StatCard';
 import { BarChart } from '../components/ui/BarChart';
@@ -11,48 +10,92 @@ import { DataSection } from '../components/ui/DataSection';
 import { useAuth } from '../hooks/useAuth';
 import { useBrokerSelector } from '../hooks/useBrokerSelector';
 import { dashboardService } from '../services/dashboard.service';
+import { parceriasService } from '../services/parcerias.service';
 import { MONTHS, CURRENT_YEAR } from '../config/constants';
 import { fmt } from '../utils/formatters';
-import { DashboardIndividual } from '../types';
+import { DashboardIndividual, Parceria } from '../types';
 
 export default function IndividualPage() {
   const { user } = useAuth();
   const { brokers, selectedBrokerId, setSelectedBrokerId } = useBrokerSelector();
+  const [parcerias, setParcerias] = useState<Parceria[]>([]);
   const [month, setMonth] = useState(0);
   const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<DashboardIndividual | null>(null);
   const [evolution, setEvolution] = useState<{ month: number; meta: number; realizado: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Evolution only depends on broker + year (cached across month changes)
   useEffect(() => {
-    if (!selectedBrokerId) return;
+    if (user?.role === 'gestor') {
+      parceriasService.getActive().then(setParcerias).catch(console.error);
+    }
+  }, [user]);
+
+  // For parcerias, we pass the first member's brokerId to the dashboard endpoint
+  // which will auto-detect the partnership
+  const getEffectiveId = () => {
+    // Check if selected is a parceria ID
+    const parceria = parcerias.find(p => p.id === selectedBrokerId);
+    if (parceria && parceria.parceria_membros?.length) {
+      return parceria.parceria_membros[0].broker_id;
+    }
+    return selectedBrokerId;
+  };
+
+  useEffect(() => {
+    const effectiveId = getEffectiveId();
+    if (!effectiveId) return;
     setEvolution([]);
-    dashboardService.yearlyEvolution(selectedBrokerId, year)
+    dashboardService.yearlyEvolution(effectiveId, year)
       .then(setEvolution)
       .catch(console.error);
-  }, [selectedBrokerId, year]);
+  }, [selectedBrokerId, year, parcerias]);
 
-  // Individual data depends on broker + month + year
   useEffect(() => {
-    if (!selectedBrokerId) return;
+    const effectiveId = getEffectiveId();
+    if (!effectiveId) return;
     setLoading(true);
-    dashboardService.individual(selectedBrokerId, month, year)
+    dashboardService.individual(effectiveId, month, year)
       .then(setData)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [selectedBrokerId, month, year]);
+  }, [selectedBrokerId, month, year, parcerias]);
 
   const chartData = evolution.length > 0
     ? evolution.map(e => ({ meta: e.meta, realizado: e.realizado }))
     : Array.from({ length: 12 }, () => ({ meta: 0, realizado: 0 }));
 
+  // Build select options: brokers that are NOT in a partnership + parcerias
+  const brokersInParcerias = new Set(
+    parcerias.flatMap(p => (p.parceria_membros || []).map(m => m.broker_id))
+  );
+  const soloBrokers = brokers.filter(b => !brokersInParcerias.has(b.id));
+
   return (
     <div>
-      <PageHeader title="Corretor Individual" description="Acompanhamento de performance mensal detalhado" />
+      <PageHeader title="Painel de Performance" description="Acompanhamento de performance mensal detalhado" />
 
       {user?.role === 'gestor' && (
-        <BrokerSelect brokers={brokers} selectedId={selectedBrokerId} onChange={setSelectedBrokerId} />
+        <div className="flex items-center gap-4 mb-6">
+          <select
+            value={selectedBrokerId}
+            onChange={e => setSelectedBrokerId(e.target.value)}
+            className="px-4 py-2.5 bg-white border border-gray-200 rounded-sm font-main text-sm outline-none cursor-pointer min-w-[200px]"
+          >
+            {parcerias.length > 0 && (
+              <optgroup label="Parcerias">
+                {parcerias.map(p => (
+                  <option key={p.id} value={p.id}>{p.nome}</option>
+                ))}
+              </optgroup>
+            )}
+            <optgroup label="Corretores">
+              {soloBrokers.map(b => (
+                <option key={b.id} value={b.id}>{b.name} — {b.team}</option>
+              ))}
+            </optgroup>
+          </select>
+        </div>
       )}
 
       <MonthTabs activeMonth={month} onSelect={setMonth} activeYear={year} onYearChange={setYear} />

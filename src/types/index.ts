@@ -106,6 +106,37 @@ export interface PlanoAcao {
   gestor?: { name: string };
 }
 
+export interface Parceria {
+  id: string;
+  nome: string;
+  active: boolean;
+  created_at: string;
+  parceria_membros?: ParceriaMembro[];
+}
+
+export interface ParceriaMembro {
+  id: string;
+  parceria_id: string;
+  broker_id: string;
+  created_at: string;
+  broker?: { id: string; name: string; email: string; team: string };
+}
+
+export interface MetaParceria {
+  id: string;
+  parceria_id: string;
+  month: number;
+  year: number;
+  vgv_anual: number;
+  vgv_mensal: number;
+  captacoes: number;
+  capt_exclusivas: number;
+  negocios: number;
+  treinamento: number;
+  investimento: number;
+  positivacao: number;
+}
+
 export interface BrokerSummary {
   id: string;
   name: string;
@@ -114,6 +145,7 @@ export interface BrokerSummary {
   realizado: number;
   percentual: number;
   desvio: number;
+  isParceria?: boolean;
 }
 
 export interface DashboardConsolidated {
@@ -130,6 +162,8 @@ export interface DashboardConsolidated {
 
 export interface DashboardIndividual {
   broker: { id: string; name: string; team: string };
+  isParceria?: boolean;
+  parceriaId?: string;
   vgvRealizado: number;
   metaVGVMensal: number;
   captacoes: number;
@@ -159,6 +193,7 @@ export interface RankingItem {
   treinamentoHoras: number;
   investimento: number;
   positivacoes: number;
+  isParceria?: boolean;
 }
 
 export interface ApiResponse<T = unknown> {

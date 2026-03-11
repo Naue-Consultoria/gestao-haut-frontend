@@ -10,6 +10,7 @@ import { dashboardService } from '../services/dashboard.service';
 import { CURRENT_YEAR } from '../config/constants';
 import { fmt } from '../utils/formatters';
 import { RankingItem as RankingItemType } from '../types';
+import { Users } from 'lucide-react';
 
 export default function RankingPage() {
   const [month, setMonth] = useState(0);
@@ -48,7 +49,7 @@ export default function RankingPage() {
                 key={r.brokerId}
                 position={r.position}
                 name={r.name}
-                team={r.team}
+                team={r.isParceria ? '' : r.team}
                 stats={[
                   { label: 'VGV', value: fmt(r.vgvRealizado) },
                   { label: 'Captações', value: String(r.captacoes) },
@@ -74,7 +75,12 @@ export default function RankingPage() {
                 {data.map(r => (
                   <tr key={r.brokerId} className="hover:bg-gray-50">
                     <td className="px-6 py-3.5 text-sm border-b border-gray-100 font-mono font-bold text-gray-400">{r.position}</td>
-                    <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700 font-semibold">{r.name}</td>
+                    <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700 font-semibold">
+                      <span className="flex items-center gap-1.5">
+                        {r.isParceria && <Users size={14} className="text-gray-400 flex-shrink-0" />}
+                        {r.name}
+                      </span>
+                    </td>
                     <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{fmt(r.vgvRealizado)}</td>
                     <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{r.captacoes}</td>
                     <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{r.negocios}</td>

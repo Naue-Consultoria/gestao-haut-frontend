@@ -7,7 +7,9 @@ import { Toast } from '../components/ui/Toast';
 import { useBrokerSelector } from '../hooks/useBrokerSelector';
 import { useToast } from '../hooks/useToast';
 import { metasService } from '../services/metas.service';
+import { parceriasService } from '../services/parcerias.service';
 import { MONTHS, CURRENT_YEAR } from '../config/constants';
+import { Parceria } from '../types';
 
 export default function MetasPage() {
   const { brokers, selectedBrokerId, setSelectedBrokerId } = useBrokerSelector();
@@ -17,6 +19,9 @@ export default function MetasPage() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
 
+  const [parcerias, setParcerias] = useState<Parceria[]>([]);
+  const [selectedId, setSelectedId] = useState('');
+
   const [vgvAnual, setVgvAnual] = useState('');
   const [captacoes, setCaptacoes] = useState('');
   const [captExclusivas, setCaptExclusivas] = useState('');
@@ -25,8 +30,30 @@ export default function MetasPage() {
   const [investimento, setInvestimento] = useState('');
   const [positivacao, setPositivacao] = useState('');
 
-  // Auto-calculate mensal from anual
   const vgvMensal = vgvAnual ? String(Math.round((Number(vgvAnual) / 12) * 100) / 100) : '';
+
+  useEffect(() => {
+    parceriasService.getActive().then(setParcerias).catch(console.error);
+  }, []);
+
+  // Sync selectedId with first available option
+  useEffect(() => {
+    if (selectedId) return;
+    if (parcerias.length > 0) {
+      setSelectedId(parcerias[0].id);
+    } else if (selectedBrokerId) {
+      setSelectedId(selectedBrokerId);
+    }
+  }, [parcerias, selectedBrokerId]);
+
+  // Brokers in partnerships (excluded from solo list)
+  const brokersInParcerias = new Set(
+    parcerias.flatMap(p => (p.parceria_membros || []).map(m => m.broker_id))
+  );
+  const soloBrokers = brokers.filter(b => !brokersInParcerias.has(b.id));
+
+  // Determine if selected is a parceria or a broker
+  const isParceriaSelected = parcerias.some(p => p.id === selectedId);
 
   const clearForm = () => {
     setVgvAnual('');
@@ -39,10 +66,14 @@ export default function MetasPage() {
   };
 
   const loadMeta = useCallback(async () => {
-    if (!selectedBrokerId) return;
+    if (!selectedId) return;
+
     setFetching(true);
     try {
-      const meta = await metasService.getByBrokerAndMonth(selectedBrokerId, month, year);
+      const meta = isParceriaSelected
+        ? await parceriasService.getMetaByMonth(selectedId, month, year)
+        : await metasService.getByBrokerAndMonth(selectedId, month, year);
+
       if (meta) {
         setVgvAnual(meta.vgv_anual ? String(meta.vgv_anual) : '');
         setCaptacoes(meta.captacoes ? String(meta.captacoes) : '');
@@ -58,28 +89,20 @@ export default function MetasPage() {
       clearForm();
     }
     setFetching(false);
-  }, [selectedBrokerId, month, year]);
+  }, [selectedId, isParceriaSelected, month, year]);
 
   useEffect(() => {
     loadMeta();
   }, [loadMeta]);
 
   const handleSave = async () => {
-    if (!selectedBrokerId) {
-      showToast('Selecione um corretor');
-      return;
-    }
+    if (!selectedId) return showToast('Selecione um corretor ou parceria');
 
     setLoading(true);
     try {
       const vgvAnualNum = Number(vgvAnual) || 0;
       const vgvMensalNum = Number(vgvMensal) || 0;
-
-      // 1. Save VGV anual + mensal for ALL 12 months
-      await metasService.bulkUpsertVgv(selectedBrokerId, year, vgvAnualNum, vgvMensalNum);
-
-      // 2. Save all fields for the current month (sequential to avoid race condition)
-      await metasService.upsert(selectedBrokerId, month, year, {
+      const metaData = {
         vgv_anual: vgvAnualNum,
         vgv_mensal: vgvMensalNum,
         captacoes: Number(captacoes) || 0,
@@ -88,11 +111,17 @@ export default function MetasPage() {
         treinamento: Number(treinamento) || 0,
         investimento: Number(investimento) || 0,
         positivacao: Number(positivacao) || 0,
-      });
+      };
 
-      // 3. Re-fetch to confirm data was persisted
+      if (isParceriaSelected) {
+        await parceriasService.bulkUpsertVgv(selectedId, year, vgvAnualNum, vgvMensalNum);
+        await parceriasService.upsertMeta(selectedId, month, year, metaData);
+      } else {
+        await metasService.bulkUpsertVgv(selectedId, year, vgvAnualNum, vgvMensalNum);
+        await metasService.upsert(selectedId, month, year, metaData);
+      }
+
       await loadMeta();
-
       showToast('Metas salvas com sucesso');
     } catch {
       showToast('Erro ao salvar metas');
@@ -105,16 +134,27 @@ export default function MetasPage() {
 
   return (
     <div>
-      <PageHeader title="Definir Metas" description="Configure os objetivos de cada corretor" />
+      <PageHeader title="Definir Metas" description="Configure os objetivos de corretores e parcerias" />
 
       {/* Seletores */}
       <div className="flex items-center gap-4 mb-6 flex-wrap">
         <select
-          value={selectedBrokerId}
-          onChange={e => setSelectedBrokerId(e.target.value)}
+          value={selectedId}
+          onChange={e => setSelectedId(e.target.value)}
           className="px-4 py-2.5 bg-white border border-gray-200 rounded-sm font-main text-sm outline-none cursor-pointer min-w-[200px]"
         >
-          {brokers.map(b => <option key={b.id} value={b.id}>{b.name} — {b.team}</option>)}
+          {parcerias.length > 0 && (
+            <optgroup label="Parcerias">
+              {parcerias.map(p => (
+                <option key={p.id} value={p.id}>{p.nome}</option>
+              ))}
+            </optgroup>
+          )}
+          <optgroup label="Corretores">
+            {soloBrokers.map(b => (
+              <option key={b.id} value={b.id}>{b.name} — {b.team}</option>
+            ))}
+          </optgroup>
         </select>
         <select
           value={month}
@@ -135,7 +175,7 @@ export default function MetasPage() {
         {fetching && <span className="text-xs text-gray-400 font-main">Carregando...</span>}
       </div>
 
-      {/* Metas VGV — Aplicadas ao ano inteiro */}
+      {/* Metas VGV */}
       <div className="bg-white border border-gray-200 rounded-[12px] p-8 mb-4">
         <div className="flex items-center gap-3 mb-1">
           <div className="text-[15px] font-semibold tracking-tight">Meta VGV — Anual</div>
@@ -153,7 +193,7 @@ export default function MetasPage() {
         </div>
       </div>
 
-      {/* Outras Metas — Por mês */}
+      {/* Outras Metas */}
       <div className="bg-white border border-gray-200 rounded-[12px] p-8 mb-6">
         <div className="flex items-center gap-3 mb-1">
           <div className="text-[15px] font-semibold tracking-tight">Metas Mensais — {MONTHS[month]}</div>
@@ -183,8 +223,7 @@ export default function MetasPage() {
         </div>
       </div>
 
-      {/* Botão Salvar */}
-      <Button onClick={handleSave} disabled={loading || fetching || !selectedBrokerId} className="mb-6">
+      <Button onClick={handleSave} disabled={loading || fetching || !selectedId} className="mb-6">
         {loading ? 'Salvando...' : 'Salvar Metas'}
       </Button>
 

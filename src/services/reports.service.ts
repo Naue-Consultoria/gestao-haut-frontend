@@ -34,11 +34,17 @@ export interface ReportData {
   planosAcao: { texto: string; prazo: string; status: string }[];
   monthlyVgv: number[];
   monthlyMeta: number[];
+  isParceria?: boolean;
+  memberAvatars?: { name: string; avatar_url: string | null }[];
 }
 
 export const reportsService = {
   getBrokerReport: async (brokerId: string, month: number, year: number): Promise<ReportData> => {
     const res = await api.get(`/reports/broker/${brokerId}`, { params: { month, year } });
+    return res.data.data;
+  },
+  getParceriaReport: async (parceriaId: string, month: number, year: number): Promise<ReportData> => {
+    const res = await api.get(`/reports/parceria/${parceriaId}`, { params: { month, year } });
     return res.data.data;
   },
 };

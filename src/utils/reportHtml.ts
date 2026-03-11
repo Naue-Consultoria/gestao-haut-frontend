@@ -266,14 +266,18 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: #f0f0f3; col
   ${headerBar('01')}
   <div class="page-content">
     <div class="profile-hero">
-      <div class="profile-avatar">${data.broker.avatar_url ? `<img src="${escapeHtml(data.broker.avatar_url)}" alt="${escapeHtml(data.broker.name)}">` : escapeHtml(data.broker.name.charAt(0))}</div>
+      ${data.isParceria && data.memberAvatars && data.memberAvatars.length > 1 ? `
+      <div style="display:flex;gap:0;">
+        ${data.memberAvatars.map((m, i) => `<div class="profile-avatar" style="margin-left:${i > 0 ? '-20px' : '0'};z-index:${10 - i};border:4px solid var(--white);">${m.avatar_url ? `<img src="${escapeHtml(m.avatar_url)}" alt="${escapeHtml(m.name)}">` : escapeHtml(m.name.charAt(0))}</div>`).join('')}
+      </div>` : `
+      <div class="profile-avatar">${data.broker.avatar_url ? `<img src="${escapeHtml(data.broker.avatar_url)}" alt="${escapeHtml(data.broker.name)}">` : escapeHtml(data.broker.name.charAt(0))}</div>`}
       <div class="profile-info">
-        <div class="profile-tag">Relatório de Performance Individual</div>
+        <div class="profile-tag">${data.isParceria ? 'Relatório de Performance — Parceria' : 'Relatório de Performance Individual'}</div>
         <div class="profile-name">${escapeHtml(data.broker.name.toUpperCase())}</div>
         <div class="profile-meta">
           <span>Equipe ${escapeHtml(data.broker.team)}</span>
           <span class="dot"></span>
-          <span>Corretor(a)</span>
+          <span>${data.isParceria ? 'Corretores(as)' : 'Corretor(a)'}</span>
           <span class="dot"></span>
           <span>${monthName} ${year}</span>
         </div>

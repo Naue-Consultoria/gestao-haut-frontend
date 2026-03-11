@@ -2,15 +2,16 @@ import { useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutGrid, User, Activity, Search, Layers, BookOpen, DollarSign,
-  BarChart3, Target, MessageSquare, ClipboardList, Users, FileText, LogOut, ChevronsLeft, ChevronsRight, Camera
+  BarChart3, Target, MessageSquare, ClipboardList, Users, FileText, LogOut, ChevronsLeft, ChevronsRight, Camera, UserPlus
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { Avatar } from '../ui/Avatar';
 import { profilesService } from '../../services/profiles.service';
 
-const mainNav = [
-  { path: '/dashboard', label: 'Painel Geral', icon: LayoutGrid },
-  { path: '/individual', label: 'Corretor Individual', icon: User },
+const paineisNav = [
+  { path: '/dashboard', label: 'Painel Geral', icon: LayoutGrid, gestorOnly: true },
+  { path: '/individual', label: 'Painel de Performance', icon: User },
+  { path: '/ranking', label: 'Ranking', icon: BarChart3, gestorOnly: true },
 ];
 
 const diarioNav = [
@@ -21,11 +22,11 @@ const diarioNav = [
   { path: '/investimentos', label: 'Investimentos', icon: DollarSign },
 ];
 
-const gestorNav = [
-  { path: '/ranking', label: 'Ranking', icon: BarChart3 },
+const gestaoNav = [
   { path: '/metas', label: 'Definir Metas', icon: Target },
   { path: '/comentarios', label: 'Comentários', icon: MessageSquare },
   { path: '/planos-acao', label: 'Plano de Ação', icon: ClipboardList },
+  { path: '/parcerias', label: 'Parcerias', icon: UserPlus },
   { path: '/usuarios', label: 'Usuários', icon: Users },
   { path: '/relatorios', label: 'Relatórios', icon: FileText },
 ];
@@ -100,16 +101,22 @@ export function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: Sideba
 
       {/* Header */}
       <div className={`border-b border-white/[0.06] flex flex-col items-center ${collapsed ? 'px-3 pt-5 pb-4' : 'px-6 pt-6 pb-5'}`}>
-        <img src="/logo_haut_branca_login.png" alt="HAUT" className={`transition-all duration-300 ${collapsed ? 'h-7' : 'h-12'}`} />
-        {!collapsed && (
-          <div className="text-[9px] text-gray-500 tracking-[3px] uppercase mt-2" style={{ fontFamily: "'Mendl Sans Dawn', sans-serif", fontWeight: 300 }}>Diário de Bordo</div>
+        {collapsed ? (
+          <img src="/haut.png" alt="HAUT" className="h-7 w-auto transition-all duration-300" />
+        ) : (
+          <>
+            <img src="/logo_haut_branca_login.png" alt="HAUT" className="h-12 transition-all duration-300" />
+            <div className="text-[9px] text-gray-500 tracking-[3px] uppercase mt-2" style={{ fontFamily: "'Mendl Sans Dawn', sans-serif", fontWeight: 300 }}>Diário de Bordo</div>
+          </>
         )}
       </div>
 
       {/* Navigation */}
       <div className={`flex-1 py-4 overflow-y-auto ${collapsed ? 'px-2' : 'px-3'}`}>
         <SectionLabel label="Principal" />
-        {mainNav.map(item => <NavItem key={item.path} {...item} />)}
+        {paineisNav
+          .filter(item => !('gestorOnly' in item && item.gestorOnly) || user?.role === 'gestor')
+          .map(item => <NavItem key={item.path} {...item} />)}
 
         <SectionLabel label="Diário de Bordo" />
         {diarioNav.map(item => <NavItem key={item.path} {...item} />)}
@@ -117,7 +124,7 @@ export function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: Sideba
         {user?.role === 'gestor' && (
           <>
             <SectionLabel label="Gestão" />
-            {gestorNav.map(item => <NavItem key={item.path} {...item} />)}
+            {gestaoNav.map(item => <NavItem key={item.path} {...item} />)}
           </>
         )}
       </div>

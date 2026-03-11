@@ -6,12 +6,12 @@ import { StatCard } from '../components/ui/StatCard';
 import { DataSection } from '../components/ui/DataSection';
 import { DataTable } from '../components/ui/DataTable';
 import { BarChart } from '../components/ui/BarChart';
-import { Tag } from '../components/ui/Tag';
 import { Indicator } from '../components/ui/Indicator';
 import { dashboardService } from '../services/dashboard.service';
 import { MONTHS, CURRENT_YEAR } from '../config/constants';
 import { fmt, fmtPct } from '../utils/formatters';
 import { DashboardConsolidated } from '../types';
+import { Users } from 'lucide-react';
 
 export default function DashboardPage() {
   const [month, setMonth] = useState(0);
@@ -62,8 +62,12 @@ export default function DashboardPage() {
           <DataSection title="Resumo por Corretor">
             <DataTable
               columns={[
-                { key: 'name', label: 'Corretor', render: (v) => <strong>{String(v)}</strong> },
-                { key: 'team', label: 'Equipe', render: (v) => <Tag variant="light">{String(v)}</Tag> },
+                { key: 'name', label: 'Corretor', render: (v, row) => (
+                  <strong className="flex items-center gap-1.5">
+                    {(row as any).isParceria && <Users size={14} className="text-gray-400 flex-shrink-0" />}
+                    {String(v)}
+                  </strong>
+                )},
                 { key: 'metaAnual', label: 'Meta Anual', render: (v) => fmt(Number(v)) },
                 { key: 'realizado', label: 'Realizado', render: (v) => <strong>{fmt(Number(v))}</strong> },
                 { key: 'percentual', label: '% Atingido', render: (v) => {
