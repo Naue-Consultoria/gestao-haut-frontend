@@ -9,10 +9,12 @@ interface BarChartData {
 interface BarChartProps {
   data: BarChartData[];
   title?: string;
+  highlightIndex?: number;
 }
 
-export function BarChart({ data, title }: BarChartProps) {
+export function BarChart({ data, title, highlightIndex }: BarChartProps) {
   const maxVal = Math.max(1, ...data.flatMap(d => [d.meta, d.realizado]));
+  const hasHighlight = highlightIndex !== undefined && highlightIndex >= 0;
 
   return (
     <div className="bg-white border border-gray-200 rounded-[12px] p-6 mb-6">
@@ -21,13 +23,18 @@ export function BarChart({ data, title }: BarChartProps) {
         {data.map((d, i) => {
           const mh = Math.max(4, (d.meta / maxVal) * 160);
           const rh = Math.max(4, (d.realizado / maxVal) * 160);
+          const isHighlighted = !hasHighlight || i === highlightIndex;
+          const opacity = isHighlighted ? 1 : 0.35;
+          const scale = hasHighlight && i === highlightIndex ? 'scale-x-110' : '';
           return (
-            <div key={i} className="flex-1 flex flex-col items-center h-full justify-end">
+            <div key={i} className={`flex-1 flex flex-col items-center h-full justify-end transition-opacity duration-300 ${scale}`} style={{ opacity }}>
               <div className="flex gap-0.5 items-end h-full">
                 <div className="bg-gray-200 rounded-t w-[18px] transition-all duration-1000" style={{ height: `${mh}px` }} />
                 <div className="bg-accent rounded-t w-[18px] transition-all duration-1000" style={{ height: `${rh}px` }} />
               </div>
-              <div className="text-[10px] text-gray-500 mt-2 text-center">{d.label || MONTHS_SHORT[i]}</div>
+              <div className={`text-[10px] mt-2 text-center ${hasHighlight && i === highlightIndex ? 'text-black font-bold' : 'text-gray-500'}`}>
+                {d.label || MONTHS_SHORT[i]}
+              </div>
             </div>
           );
         })}

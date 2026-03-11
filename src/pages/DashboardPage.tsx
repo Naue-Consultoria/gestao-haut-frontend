@@ -17,8 +17,18 @@ export default function DashboardPage() {
   const [month, setMonth] = useState(0);
   const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<DashboardConsolidated | null>(null);
+  const [evolution, setEvolution] = useState<{ month: number; meta: number; realizado: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Evolution only depends on year (cached across month changes)
+  useEffect(() => {
+    setEvolution([]);
+    dashboardService.consolidatedEvolution(year)
+      .then(setEvolution)
+      .catch(console.error);
+  }, [year]);
+
+  // Consolidated data depends on month + year
   useEffect(() => {
     setLoading(true);
     dashboardService.consolidated(month, year)
@@ -27,10 +37,9 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, [month, year]);
 
-  const chartData = Array.from({ length: 12 }, (_, i) => ({
-    meta: i === month ? (data?.metaVGV || 0) : 0,
-    realizado: i === month ? (data?.totalVGV || 0) : 0,
-  }));
+  const chartData = evolution.length > 0
+    ? evolution.map(e => ({ meta: e.meta, realizado: e.realizado }))
+    : Array.from({ length: 12 }, () => ({ meta: 0, realizado: 0 }));
 
   return (
     <div>
@@ -48,7 +57,7 @@ export default function DashboardPage() {
             <StatCard label={`Captações em ${MONTHS[month]}`} value={String(data.totalCaptacoes)} />
           </StatsGrid>
 
-          <BarChart data={chartData} title="Meta × Realizado Mensal" />
+          <BarChart data={chartData} title="Meta × Realizado Mensal" highlightIndex={month} />
 
           <DataSection title="Resumo por Corretor">
             <DataTable

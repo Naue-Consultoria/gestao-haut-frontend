@@ -12,7 +12,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useBrokerSelector } from '../hooks/useBrokerSelector';
 import { dashboardService } from '../services/dashboard.service';
 import { MONTHS, CURRENT_YEAR } from '../config/constants';
-import { fmt, fmtPct } from '../utils/formatters';
+import { fmt } from '../utils/formatters';
 import { DashboardIndividual } from '../types';
 
 export default function IndividualPage() {
@@ -21,8 +21,19 @@ export default function IndividualPage() {
   const [month, setMonth] = useState(0);
   const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<DashboardIndividual | null>(null);
+  const [evolution, setEvolution] = useState<{ month: number; meta: number; realizado: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Evolution only depends on broker + year (cached across month changes)
+  useEffect(() => {
+    if (!selectedBrokerId) return;
+    setEvolution([]);
+    dashboardService.yearlyEvolution(selectedBrokerId, year)
+      .then(setEvolution)
+      .catch(console.error);
+  }, [selectedBrokerId, year]);
+
+  // Individual data depends on broker + month + year
   useEffect(() => {
     if (!selectedBrokerId) return;
     setLoading(true);
@@ -32,10 +43,9 @@ export default function IndividualPage() {
       .finally(() => setLoading(false));
   }, [selectedBrokerId, month, year]);
 
-  const chartData = Array.from({ length: 12 }, (_, i) => ({
-    meta: i === month ? (data?.metaVGVMensal || 0) : 0,
-    realizado: i === month ? (data?.vgvRealizado || 0) : 0,
-  }));
+  const chartData = evolution.length > 0
+    ? evolution.map(e => ({ meta: e.meta, realizado: e.realizado }))
+    : Array.from({ length: 12 }, () => ({ meta: 0, realizado: 0 }));
 
   return (
     <div>
@@ -63,7 +73,7 @@ export default function IndividualPage() {
             <StatCard label="Investimentos" value={fmt(data.investimentoValor)} change={`Meta: ${fmt(data.metaInvestimento)}`} changeType={data.investimentoValor >= data.metaInvestimento ? 'positive' : 'negative'} />
           </StatsGrid>
 
-          <BarChart data={chartData} title="Evolução Mensal — Meta × Realizado" />
+          <BarChart data={chartData} title="Evolução Mensal — Meta × Realizado" highlightIndex={month} />
 
           <DataSection title="Efetividade">
             <div className="p-6 space-y-4">

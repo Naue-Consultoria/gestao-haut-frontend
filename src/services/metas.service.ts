@@ -12,4 +12,6 @@ export const metasService = {
   },
   upsert: (brokerId: string, month: number, year: number, data: Partial<Meta>) =>
     api.put(`/metas/${brokerId}/${month}`, data, { params: { year } }),
+  bulkUpsertVgv: (brokerId: string, year: number, vgv_anual: number, vgv_mensal: number) =>
+    api.put(`/metas/${brokerId}/bulk-vgv`, { vgv_anual, vgv_mensal }, { params: { year } }),
 };

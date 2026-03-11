@@ -5,6 +5,7 @@ interface CurrencyInputProps {
   onChange: (raw: string) => void;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 function formatCurrency(cents: number): string {
@@ -30,18 +31,16 @@ function valueToCents(val: string): number {
   return Math.round(num * 100);
 }
 
-export function CurrencyInput({ value, onChange, placeholder = '0,00', className }: CurrencyInputProps) {
+export function CurrencyInput({ value, onChange, placeholder = '0,00', className, disabled }: CurrencyInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const centsRef = useRef(valueToCents(value));
 
-  // Sync external value changes (e.g. when loading data from API)
+  // Sync external value changes (e.g. when loading data from API or computed values)
   useEffect(() => {
     const newCents = valueToCents(value);
-    if (newCents !== centsRef.current) {
-      centsRef.current = newCents;
-      if (inputRef.current) {
-        inputRef.current.value = formatCurrency(newCents);
-      }
+    centsRef.current = newCents;
+    if (inputRef.current) {
+      inputRef.current.value = formatCurrency(newCents);
     }
   }, [value]);
 
@@ -83,6 +82,7 @@ export function CurrencyInput({ value, onChange, placeholder = '0,00', className
       onKeyDown={handleKeyDown}
       placeholder={placeholder}
       className={className}
+      disabled={disabled}
     />
   );
 }

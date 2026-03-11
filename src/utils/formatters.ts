@@ -1,6 +1,6 @@
 export function fmt(n: number | null | undefined): string {
-  if (n == null || isNaN(n)) return 'R$ 0';
-  return 'R$ ' + Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  if (n == null || isNaN(n)) return 'R$ 0,00';
+  return 'R$ ' + Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export function fmtPct(n: number): string {
