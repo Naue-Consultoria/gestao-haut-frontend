@@ -1,5 +1,5 @@
 import api from '../config/api';
-import { Parceria, MetaParceria } from '../types';
+import { Parceria, MetaParceria, Comentario } from '../types';
 
 export const parceriasService = {
   getAll: async (): Promise<Parceria[]> => {
@@ -47,4 +47,17 @@ export const parceriasService = {
     api.put(`/parcerias/${parceriaId}/metas/${month}`, data, { params: { year } }),
   bulkUpsertVgv: (parceriaId: string, year: number, vgv_anual: number, vgv_mensal: number) =>
     api.put(`/parcerias/${parceriaId}/metas/bulk-vgv`, { vgv_anual, vgv_mensal }, { params: { year } }),
+
+  // Comentários
+  getComentarios: async (parceriaId: string): Promise<Comentario[]> => {
+    const res = await api.get(`/parcerias/${parceriaId}/comentarios`);
+    return res.data.data;
+  },
+  getComentarioByMonth: async (parceriaId: string, month: number, year: number): Promise<Comentario | null> => {
+    const res = await api.get(`/parcerias/${parceriaId}/comentarios/${month}`, { params: { year } });
+    return res.data.data;
+  },
+  upsertComentario: (parceriaId: string, month: number, year: number, texto: string) =>
+    api.put(`/parcerias/${parceriaId}/comentarios/${month}`, { texto }, { params: { year } }),
+  deleteComentario: (id: string) => api.delete(`/parcerias/comentarios/${id}`),
 };

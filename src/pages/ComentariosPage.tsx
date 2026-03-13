@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { FormGroup } from '../components/ui/FormGroup';
 import { Button } from '../components/ui/Button';
@@ -6,13 +6,14 @@ import { Toast } from '../components/ui/Toast';
 import { useBrokerSelector } from '../hooks/useBrokerSelector';
 import { useToast } from '../hooks/useToast';
 import { comentariosService } from '../services/comentarios.service';
+import { parceriasService } from '../services/parcerias.service';
 import { MONTHS, CURRENT_YEAR } from '../config/constants';
-import { Comentario } from '../types';
+import { Comentario, Parceria } from '../types';
 import { Modal } from '../components/ui/Modal';
 import { Pencil, Trash2 } from 'lucide-react';
 
 export default function ComentariosPage() {
-  const { brokers, selectedBrokerId, setSelectedBrokerId } = useBrokerSelector();
+  const { brokers, selectedBrokerId } = useBrokerSelector();
   const { toast, showToast } = useToast();
   const [month, setMonth] = useState(0);
   const [year, setYear] = useState(CURRENT_YEAR);
@@ -22,27 +23,70 @@ export default function ComentariosPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Comentario | null>(null);
 
-  useEffect(() => {
-    if (!selectedBrokerId) return;
-    comentariosService.getByBrokerAndMonth(selectedBrokerId, month, year).then(c => {
-      setTexto(c?.texto || '');
-      setEditingId(null);
-    });
-    comentariosService.getByBroker(selectedBrokerId).then(setHistory);
-  }, [selectedBrokerId, month, year]);
+  const [parcerias, setParcerias] = useState<Parceria[]>([]);
+  const [selectedId, setSelectedId] = useState('');
 
-  const refreshHistory = () => {
-    comentariosService.getByBroker(selectedBrokerId).then(setHistory);
-  };
+  useEffect(() => {
+    parceriasService.getActive().then(setParcerias).catch(console.error);
+  }, []);
+
+  // Sync selectedId with first available option
+  useEffect(() => {
+    if (selectedId) return;
+    if (parcerias.length > 0) {
+      setSelectedId(parcerias[0].id);
+    } else if (selectedBrokerId) {
+      setSelectedId(selectedBrokerId);
+    }
+  }, [parcerias, selectedBrokerId]);
+
+  // Brokers in partnerships (excluded from solo list)
+  const brokersInParcerias = new Set(
+    parcerias.flatMap(p => (p.parceria_membros || []).map(m => m.broker_id))
+  );
+  const soloBrokers = brokers.filter(b => !brokersInParcerias.has(b.id));
+
+  const isParceriaSelected = parcerias.some(p => p.id === selectedId);
+
+  const loadData = useCallback(async () => {
+    if (!selectedId) return;
+
+    try {
+      if (isParceriaSelected) {
+        const c = await parceriasService.getComentarioByMonth(selectedId, month, year);
+        setTexto(c?.texto || '');
+        setEditingId(null);
+        const all = await parceriasService.getComentarios(selectedId);
+        setHistory(all);
+      } else {
+        const c = await comentariosService.getByBrokerAndMonth(selectedId, month, year);
+        setTexto(c?.texto || '');
+        setEditingId(null);
+        const all = await comentariosService.getByBroker(selectedId);
+        setHistory(all);
+      }
+    } catch {
+      setTexto('');
+      setHistory([]);
+    }
+  }, [selectedId, isParceriaSelected, month, year]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleSave = async () => {
     if (!texto.trim()) { showToast('Escreva um comentário'); return; }
     setLoading(true);
     try {
-      await comentariosService.upsert(selectedBrokerId, month, year, texto);
+      if (isParceriaSelected) {
+        await parceriasService.upsertComentario(selectedId, month, year, texto);
+      } else {
+        await comentariosService.upsert(selectedId, month, year, texto);
+      }
       showToast('Comentário salvo');
       setEditingId(null);
-      refreshHistory();
+      await loadData();
     } catch { showToast('Erro ao salvar'); }
     setLoading(false);
   };
@@ -58,33 +102,60 @@ export default function ComentariosPage() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await comentariosService.delete(deleteTarget.id);
+      if (isParceriaSelected) {
+        await parceriasService.deleteComentario(deleteTarget.id);
+      } else {
+        await comentariosService.delete(deleteTarget.id);
+      }
       showToast('Comentário excluído');
       if (editingId === deleteTarget.id) {
         setTexto('');
         setEditingId(null);
       }
-      refreshHistory();
+      await loadData();
     } catch { showToast('Erro ao excluir'); }
     setDeleteTarget(null);
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     setEditingId(null);
-    comentariosService.getByBrokerAndMonth(selectedBrokerId, month, year).then(c => {
-      setTexto(c?.texto || '');
-    });
+    try {
+      if (isParceriaSelected) {
+        const c = await parceriasService.getComentarioByMonth(selectedId, month, year);
+        setTexto(c?.texto || '');
+      } else {
+        const c = await comentariosService.getByBrokerAndMonth(selectedId, month, year);
+        setTexto(c?.texto || '');
+      }
+    } catch {
+      setTexto('');
+    }
   };
 
   const inputClass = 'w-full px-4 py-3 bg-gray-50 border border-gray-200 text-black rounded-sm font-main text-sm outline-none transition-all focus:border-gray-400 focus:bg-white min-h-[100px] resize-y';
 
   return (
     <div>
-      <PageHeader title="Comentários do Gestor" description="Feedback mensal para cada corretor" />
+      <PageHeader title="Comentários do Gestor" description="Feedback mensal para corretores e parcerias" />
 
-      <div className="flex items-center gap-4 mb-6">
-        <select value={selectedBrokerId} onChange={e => setSelectedBrokerId(e.target.value)} className="px-4 py-2.5 bg-white border border-gray-200 rounded-sm font-main text-sm outline-none cursor-pointer min-w-[200px]">
-          {brokers.map(b => <option key={b.id} value={b.id}>{b.name} — {b.team}</option>)}
+      <div className="flex items-center gap-4 mb-6 flex-wrap">
+        <select
+          value={selectedId}
+          onChange={e => setSelectedId(e.target.value)}
+          className="px-4 py-2.5 bg-white border border-gray-200 rounded-sm font-main text-sm outline-none cursor-pointer min-w-[200px]"
+        >
+          {parcerias.length > 0 && (
+            <optgroup label="Parcerias">
+              {parcerias.map(p => (
+                <option key={p.id} value={p.id}>{p.nome}</option>
+              ))}
+            </optgroup>
+          )}
+          <optgroup label="Corretores">
+            {soloBrokers.map(b => (
+              <option key={b.id} value={b.id}>{b.name} — {b.team}</option>
+            ))}
+          </optgroup>
         </select>
         <select value={month} onChange={e => setMonth(Number(e.target.value))} className="px-4 py-2.5 bg-white border border-gray-200 rounded-sm font-main text-sm outline-none cursor-pointer">
           {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
@@ -98,7 +169,7 @@ export default function ComentariosPage() {
 
       <div className="bg-white border border-gray-200 rounded-[12px] p-8 mb-6">
         <FormGroup label={editingId ? `Editando comentário — ${MONTHS[month]} ${year}` : 'Comentário do Diretor / Gente e Gestão'}>
-          <textarea value={texto} onChange={e => setTexto(e.target.value)} placeholder="Escreva seu feedback sobre a performance do corretor neste mês..." className={inputClass} />
+          <textarea value={texto} onChange={e => setTexto(e.target.value)} placeholder="Escreva seu feedback sobre a performance neste mês..." className={inputClass} />
         </FormGroup>
         <div className="flex gap-3">
           <Button onClick={handleSave} disabled={loading}>{loading ? 'Salvando...' : 'Salvar Comentário'}</Button>

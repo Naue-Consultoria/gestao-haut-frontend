@@ -83,7 +83,8 @@ export interface Investimento {
 
 export interface Comentario {
   id: string;
-  broker_id: string;
+  broker_id?: string;
+  parceria_id?: string;
   gestor_id: string;
   month: number;
   year: number;
