@@ -1,5 +1,5 @@
 import api from '../config/api';
-import { Parceria, MetaParceria, Comentario } from '../types';
+import { Parceria, MetaParceria, Comentario, PlanoAcao } from '../types';
 
 export const parceriasService = {
   getAll: async (): Promise<Parceria[]> => {
@@ -60,4 +60,20 @@ export const parceriasService = {
   upsertComentario: (parceriaId: string, month: number, year: number, texto: string) =>
     api.put(`/parcerias/${parceriaId}/comentarios/${month}`, { texto }, { params: { year } }),
   deleteComentario: (id: string) => api.delete(`/parcerias/comentarios/${id}`),
+
+  // Planos de Ação
+  getPlanosAcao: async (parceriaId: string): Promise<PlanoAcao[]> => {
+    const res = await api.get(`/parcerias/${parceriaId}/planos-acao`);
+    return res.data.data;
+  },
+  getPlanosAcaoByMonth: async (parceriaId: string, month: number, year: number): Promise<PlanoAcao[]> => {
+    const res = await api.get(`/parcerias/${parceriaId}/planos-acao/${month}`, { params: { year } });
+    return res.data.data;
+  },
+  createPlanoAcao: (parceriaId: string, data: { texto: string; prazo: string; status: string; month: number; year: number }) =>
+    api.post(`/parcerias/${parceriaId}/planos-acao`, data),
+  updatePlanoAcao: (id: string, data: { texto?: string; prazo?: string; status?: string }) =>
+    api.put(`/parcerias/planos-acao/${id}`, data),
+  deletePlanoAcao: (id: string) =>
+    api.delete(`/parcerias/planos-acao/${id}`),
 };
