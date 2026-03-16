@@ -6,7 +6,7 @@ export const treinamentosService = {
     const res = await api.get('/treinamentos', { params: { brokerId, month, year } });
     return res.data.data;
   },
-  create: (data: Omit<Treinamento, 'id' | 'broker_id'>) =>
+  create: (data: Omit<Treinamento, 'id' | 'broker_id'> & { broker_id?: string }) =>
     api.post('/treinamentos', data),
   delete: (id: string) =>
     api.delete(`/treinamentos/${id}`),

@@ -6,7 +6,7 @@ export const investimentosService = {
     const res = await api.get('/investimentos', { params: { brokerId, month, year } });
     return res.data.data;
   },
-  create: (data: Omit<Investimento, 'id' | 'broker_id'>) =>
+  create: (data: Omit<Investimento, 'id' | 'broker_id'> & { broker_id?: string }) =>
     api.post('/investimentos', data),
   delete: (id: string) =>
     api.delete(`/investimentos/${id}`),

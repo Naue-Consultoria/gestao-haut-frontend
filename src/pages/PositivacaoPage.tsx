@@ -12,15 +12,15 @@ import { FormGroup } from '../components/ui/FormGroup';
 import { FormRow } from '../components/ui/FormRow';
 import { CurrencyInput } from '../components/ui/CurrencyInput';
 import { Toast } from '../components/ui/Toast';
-import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
+import { useBrokerParceriaSelector } from '../hooks/useBrokerParceriaSelector';
 import { positivacoesService } from '../services/positivacoes.service';
 import { CURRENT_YEAR } from '../config/constants';
 import { fmt } from '../utils/formatters';
 import { Positivacao } from '../types';
 
 export default function PositivacaoPage() {
-  const { user } = useAuth();
+  const { isGestor, parcerias, soloBrokers, selectedId, setSelectedId, getEffectiveBrokerId, getListBrokerId } = useBrokerParceriaSelector();
   const { toast, showToast } = useToast();
   const [month, setMonth] = useState(0);
   const [year, setYear] = useState(CURRENT_YEAR);
@@ -34,13 +34,14 @@ export default function PositivacaoPage() {
   const [comissao, setComissao] = useState('');
 
   const load = useCallback(() => {
-    if (!user) return;
+    const brokerId = getListBrokerId();
+    if (!brokerId) return;
     setLoading(true);
-    positivacoesService.list(user.id, month, year)
+    positivacoesService.list(brokerId, month, year)
       .then(setData)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [user, month, year]);
+  }, [selectedId, month, year]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -50,7 +51,9 @@ export default function PositivacaoPage() {
   const handleSave = async () => {
     if (!oportunidade) { showToast('Preencha a oportunidade'); return; }
     try {
-      await positivacoesService.create({ month, year, oportunidade, parceria, vgv: Number(vgv) || 0, comissao: Number(comissao) || 0 });
+      const payload: any = { month, year, oportunidade, parceria, vgv: Number(vgv) || 0, comissao: Number(comissao) || 0 };
+      if (isGestor) payload.broker_id = getEffectiveBrokerId();
+      await positivacoesService.create(payload);
       setModalOpen(false);
       setOportunidade(''); setParceria('NÃO'); setVgv(''); setComissao('');
       showToast('Venda registrada');
@@ -66,6 +69,7 @@ export default function PositivacaoPage() {
     } catch { showToast('Erro ao excluir'); }
   };
 
+  const selectClass = 'px-4 py-2.5 bg-white border border-gray-200 rounded-sm font-main text-sm outline-none cursor-pointer min-w-[200px]';
   const inputClass = 'w-full px-4 py-3 bg-gray-50 border border-gray-200 text-black rounded-sm font-main text-sm outline-none transition-all focus:border-gray-400 focus:bg-white';
 
   return (
@@ -75,6 +79,26 @@ export default function PositivacaoPage() {
         description="Vendas efetivadas no mês"
         action={<Button icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>Registrar Venda</Button>}
       />
+
+      {isGestor && (
+        <div className="flex items-center gap-4 mb-4">
+          <select value={selectedId} onChange={e => setSelectedId(e.target.value)} className={selectClass}>
+            {parcerias.length > 0 && (
+              <optgroup label="Parcerias">
+                {parcerias.map(p => (
+                  <option key={p.id} value={p.id}>{p.nome}</option>
+                ))}
+              </optgroup>
+            )}
+            <optgroup label="Corretores">
+              {soloBrokers.map(b => (
+                <option key={b.id} value={b.id}>{b.name} — {b.team}</option>
+              ))}
+            </optgroup>
+          </select>
+        </div>
+      )}
+
       <MonthTabs activeMonth={month} onSelect={setMonth} activeYear={year} onYearChange={setYear} />
 
       <StatsGrid>

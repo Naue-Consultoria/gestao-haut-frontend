@@ -6,7 +6,7 @@ export const negociosService = {
     const res = await api.get('/negocios', { params: { brokerId, month, year } });
     return res.data.data;
   },
-  create: (data: Omit<Negocio, 'id' | 'broker_id'>) =>
+  create: (data: Omit<Negocio, 'id' | 'broker_id'> & { broker_id?: string }) =>
     api.post('/negocios', data),
   delete: (id: string) =>
     api.delete(`/negocios/${id}`),

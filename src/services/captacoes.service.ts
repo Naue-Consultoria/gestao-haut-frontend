@@ -6,7 +6,7 @@ export const captacoesService = {
     const res = await api.get('/captacoes', { params: { brokerId, month, year } });
     return res.data.data;
   },
-  create: (data: Omit<Captacao, 'id' | 'broker_id'>) =>
+  create: (data: Omit<Captacao, 'id' | 'broker_id'> & { broker_id?: string }) =>
     api.post('/captacoes', data),
   delete: (id: string) =>
     api.delete(`/captacoes/${id}`),

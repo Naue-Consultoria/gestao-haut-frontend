@@ -6,7 +6,7 @@ export const positivacoesService = {
     const res = await api.get('/positivacoes', { params: { brokerId, month, year } });
     return res.data.data;
   },
-  create: (data: Omit<Positivacao, 'id' | 'broker_id'>) =>
+  create: (data: Omit<Positivacao, 'id' | 'broker_id'> & { broker_id?: string }) =>
     api.post('/positivacoes', data),
   delete: (id: string) =>
     api.delete(`/positivacoes/${id}`),

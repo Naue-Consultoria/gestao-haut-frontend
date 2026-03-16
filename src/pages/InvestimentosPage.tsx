@@ -12,15 +12,15 @@ import { FormGroup } from '../components/ui/FormGroup';
 import { FormRow } from '../components/ui/FormRow';
 import { CurrencyInput } from '../components/ui/CurrencyInput';
 import { Toast } from '../components/ui/Toast';
-import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
+import { useBrokerParceriaSelector } from '../hooks/useBrokerParceriaSelector';
 import { investimentosService } from '../services/investimentos.service';
 import { CURRENT_YEAR, INVESTIMENTO_TIPOS } from '../config/constants';
 import { fmt } from '../utils/formatters';
 import { Investimento } from '../types';
 
 export default function InvestimentosPage() {
-  const { user } = useAuth();
+  const { isGestor, parcerias, soloBrokers, selectedId, setSelectedId, getEffectiveBrokerId, getListBrokerId } = useBrokerParceriaSelector();
   const { toast, showToast } = useToast();
   const [month, setMonth] = useState(0);
   const [year, setYear] = useState(CURRENT_YEAR);
@@ -34,10 +34,11 @@ export default function InvestimentosPage() {
   const [leads, setLeads] = useState('');
 
   const load = useCallback(() => {
-    if (!user) return;
+    const brokerId = getListBrokerId();
+    if (!brokerId) return;
     setLoading(true);
-    investimentosService.list(user.id, month, year).then(setData).catch(console.error).finally(() => setLoading(false));
-  }, [user, month, year]);
+    investimentosService.list(brokerId, month, year).then(setData).catch(console.error).finally(() => setLoading(false));
+  }, [selectedId, month, year]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -46,7 +47,9 @@ export default function InvestimentosPage() {
 
   const handleSave = async () => {
     try {
-      await investimentosService.create({ month, year, tipo: tipo as Investimento['tipo'], produto, valor: Number(valor) || 0, leads: Number(leads) || 0 });
+      const payload: any = { month, year, tipo: tipo as Investimento['tipo'], produto, valor: Number(valor) || 0, leads: Number(leads) || 0 };
+      if (isGestor) payload.broker_id = getEffectiveBrokerId();
+      await investimentosService.create(payload);
       setModalOpen(false); setTipo('PORTAL'); setProduto(''); setValor(''); setLeads('');
       showToast('Investimento registrado'); load();
     } catch { showToast('Erro ao salvar'); }
@@ -56,11 +59,32 @@ export default function InvestimentosPage() {
     try { await investimentosService.delete(id); showToast('Registro excluído'); load(); } catch { showToast('Erro ao excluir'); }
   };
 
+  const selectClass = 'px-4 py-2.5 bg-white border border-gray-200 rounded-sm font-main text-sm outline-none cursor-pointer min-w-[200px]';
   const inputClass = 'w-full px-4 py-3 bg-gray-50 border border-gray-200 text-black rounded-sm font-main text-sm outline-none transition-all focus:border-gray-400 focus:bg-white';
 
   return (
     <div>
       <PageHeader title="Investimentos" description="Portais, patrocinados e outras ações" action={<Button icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>Registrar Investimento</Button>} />
+
+      {isGestor && (
+        <div className="flex items-center gap-4 mb-4">
+          <select value={selectedId} onChange={e => setSelectedId(e.target.value)} className={selectClass}>
+            {parcerias.length > 0 && (
+              <optgroup label="Parcerias">
+                {parcerias.map(p => (
+                  <option key={p.id} value={p.id}>{p.nome}</option>
+                ))}
+              </optgroup>
+            )}
+            <optgroup label="Corretores">
+              {soloBrokers.map(b => (
+                <option key={b.id} value={b.id}>{b.name} — {b.team}</option>
+              ))}
+            </optgroup>
+          </select>
+        </div>
+      )}
+
       <MonthTabs activeMonth={month} onSelect={setMonth} activeYear={year} onYearChange={setYear} />
 
       <StatsGrid>
