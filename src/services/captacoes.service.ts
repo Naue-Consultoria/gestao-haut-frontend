@@ -8,6 +8,8 @@ export const captacoesService = {
   },
   create: (data: Omit<Captacao, 'id' | 'broker_id'> & { broker_id?: string }) =>
     api.post('/captacoes', data),
+  update: (id: string, data: { oportunidade: string; exclusivo: string; origem: string; vgv: number }) =>
+    api.put(`/captacoes/${id}`, data),
   delete: (id: string) =>
     api.delete(`/captacoes/${id}`),
 };

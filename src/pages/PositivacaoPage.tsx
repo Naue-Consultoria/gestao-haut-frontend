@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { MonthTabs } from '../components/ui/MonthTabs';
 import { StatsGrid } from '../components/ui/StatsGrid';
@@ -26,6 +26,7 @@ export default function PositivacaoPage() {
   const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<Positivacao[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [oportunidade, setOportunidade] = useState('');
@@ -48,17 +49,33 @@ export default function PositivacaoPage() {
   const totalVGV = data.reduce((s, p) => s + Number(p.vgv), 0);
   const totalComissao = data.reduce((s, p) => s + Number(p.comissao), 0);
 
+  const resetForm = () => {
+    setModalOpen(false); setEditingId(null); setOportunidade(''); setParceria('NÃO'); setVgv(''); setComissao('');
+  };
+
   const handleSave = async () => {
     if (!oportunidade) { showToast('Preencha a oportunidade'); return; }
     try {
-      const payload: any = { month, year, oportunidade, parceria, vgv: Number(vgv) || 0, comissao: Number(comissao) || 0 };
-      if (isGestor) payload.broker_id = getEffectiveBrokerId();
-      await positivacoesService.create(payload);
-      setModalOpen(false);
-      setOportunidade(''); setParceria('NÃO'); setVgv(''); setComissao('');
-      showToast('Venda registrada');
-      load();
+      if (editingId) {
+        await positivacoesService.update(editingId, { oportunidade, parceria, vgv: Number(vgv) || 0, comissao: Number(comissao) || 0 });
+        showToast('Venda atualizada');
+      } else {
+        const payload: any = { month, year, oportunidade, parceria, vgv: Number(vgv) || 0, comissao: Number(comissao) || 0 };
+        if (isGestor) payload.broker_id = getEffectiveBrokerId();
+        await positivacoesService.create(payload);
+        showToast('Venda registrada');
+      }
+      resetForm(); load();
     } catch { showToast('Erro ao salvar'); }
+  };
+
+  const handleEdit = (row: Positivacao) => {
+    setEditingId(row.id);
+    setOportunidade(row.oportunidade);
+    setParceria(row.parceria);
+    setVgv(String(row.vgv));
+    setComissao(String(row.comissao));
+    setModalOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -77,7 +94,7 @@ export default function PositivacaoPage() {
       <PageHeader
         title="Quadro de Positivação"
         description="Vendas efetivadas no mês"
-        action={<Button icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>Registrar Venda</Button>}
+        action={<Button icon={<Plus size={16} />} onClick={() => { resetForm(); setModalOpen(true); }}>Registrar Venda</Button>}
       />
 
       {isGestor && (
@@ -131,7 +148,7 @@ export default function PositivacaoPage() {
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{fmt(row.vgv)}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{fmt(row.comissao)}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100">
-                    <Button variant="icon" size="sm" onClick={() => handleDelete(row.id)}><Trash2 size={18} /></Button>
+                    <div className="flex gap-1"><Button variant="icon" size="sm" onClick={() => handleEdit(row)}><Pencil size={18} /></Button><Button variant="icon" size="sm" onClick={() => handleDelete(row.id)}><Trash2 size={18} /></Button></div>
                   </td>
                 </tr>
               ))}
@@ -140,7 +157,7 @@ export default function PositivacaoPage() {
         )}
       </DataSection>
 
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Registrar Venda">
+      <Modal isOpen={modalOpen} onClose={resetForm} title={editingId ? 'Editar Venda' : 'Registrar Venda'}>
         <FormGroup label="Oportunidade / Empreendimento">
           <input type="text" value={oportunidade} onChange={e => setOportunidade(e.target.value)} placeholder="Nome do empreendimento" className={inputClass} />
         </FormGroup>
@@ -158,8 +175,8 @@ export default function PositivacaoPage() {
           <CurrencyInput value={comissao} onChange={setComissao} className={inputClass} />
         </FormGroup>
         <div className="flex gap-3 justify-end mt-6">
-          <Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
-          <Button onClick={handleSave}>Salvar</Button>
+          <Button variant="outline" onClick={resetForm}>Cancelar</Button>
+          <Button onClick={handleSave}>{editingId ? 'Atualizar' : 'Salvar'}</Button>
         </div>
       </Modal>
 

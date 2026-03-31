@@ -8,6 +8,8 @@ export const positivacoesService = {
   },
   create: (data: Omit<Positivacao, 'id' | 'broker_id'> & { broker_id?: string }) =>
     api.post('/positivacoes', data),
+  update: (id: string, data: { oportunidade: string; parceria: string; vgv: number; comissao: number }) =>
+    api.put(`/positivacoes/${id}`, data),
   delete: (id: string) =>
     api.delete(`/positivacoes/${id}`),
 };

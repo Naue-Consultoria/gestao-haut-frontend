@@ -8,6 +8,8 @@ export const treinamentosService = {
   },
   create: (data: Omit<Treinamento, 'id' | 'broker_id'> & { broker_id?: string }) =>
     api.post('/treinamentos', data),
+  update: (id: string, data: { atividade: string; local: string; horas: number }) =>
+    api.put(`/treinamentos/${id}`, data),
   delete: (id: string) =>
     api.delete(`/treinamentos/${id}`),
 };

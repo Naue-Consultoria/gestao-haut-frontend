@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { MonthTabs } from '../components/ui/MonthTabs';
 import { StatsGrid } from '../components/ui/StatsGrid';
@@ -26,6 +26,7 @@ export default function NegociosPage() {
   const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<Negocio[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [oportunidade, setOportunidade] = useState('');
@@ -43,15 +44,32 @@ export default function NegociosPage() {
 
   const totalVGV = data.reduce((s, n) => s + Number(n.vgv), 0);
 
+  const resetForm = () => {
+    setModalOpen(false); setEditingId(null); setOportunidade(''); setOrigem('RELACIONAMENTO'); setVgv('');
+  };
+
   const handleSave = async () => {
     if (!oportunidade) { showToast('Preencha a oportunidade'); return; }
     try {
-      const payload: any = { month, year, oportunidade, origem: origem as Negocio['origem'], vgv: Number(vgv) || 0 };
-      if (isGestor) payload.broker_id = getEffectiveBrokerId();
-      await negociosService.create(payload);
-      setModalOpen(false); setOportunidade(''); setOrigem('RELACIONAMENTO'); setVgv('');
-      showToast('Negócio registrado'); load();
+      if (editingId) {
+        await negociosService.update(editingId, { oportunidade, origem, vgv: Number(vgv) || 0 });
+        showToast('Negócio atualizado');
+      } else {
+        const payload: any = { month, year, oportunidade, origem: origem as Negocio['origem'], vgv: Number(vgv) || 0 };
+        if (isGestor) payload.broker_id = getEffectiveBrokerId();
+        await negociosService.create(payload);
+        showToast('Negócio registrado');
+      }
+      resetForm(); load();
     } catch { showToast('Erro ao salvar'); }
+  };
+
+  const handleEdit = (row: Negocio) => {
+    setEditingId(row.id);
+    setOportunidade(row.oportunidade);
+    setOrigem(row.origem);
+    setVgv(String(row.vgv));
+    setModalOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -63,7 +81,7 @@ export default function NegociosPage() {
 
   return (
     <div>
-      <PageHeader title="Negócios Levantados" description="Oportunidades geradas no mês" action={<Button icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>Registrar Negócio</Button>} />
+      <PageHeader title="Negócios Levantados" description="Oportunidades geradas no mês" action={<Button icon={<Plus size={16} />} onClick={() => { resetForm(); setModalOpen(true); }}>Registrar Negócio</Button>} />
 
       {isGestor && (
         <div className="flex items-center gap-4 mb-4">
@@ -106,7 +124,7 @@ export default function NegociosPage() {
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{row.oportunidade}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{row.origem}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{fmt(row.vgv)}</td>
-                  <td className="px-6 py-3.5 text-sm border-b border-gray-100"><Button variant="icon" size="sm" onClick={() => handleDelete(row.id)}><Trash2 size={18} /></Button></td>
+                  <td className="px-6 py-3.5 text-sm border-b border-gray-100 flex gap-1"><Button variant="icon" size="sm" onClick={() => handleEdit(row)}><Pencil size={18} /></Button><Button variant="icon" size="sm" onClick={() => handleDelete(row.id)}><Trash2 size={18} /></Button></td>
                 </tr>
               ))}
             </tbody>
@@ -114,13 +132,13 @@ export default function NegociosPage() {
         )}
       </DataSection>
 
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Registrar Negócio">
+      <Modal isOpen={modalOpen} onClose={resetForm} title={editingId ? 'Editar Negócio' : 'Registrar Negócio'}>
         <FormGroup label="Oportunidade / Descrição"><input type="text" value={oportunidade} onChange={e => setOportunidade(e.target.value)} placeholder="Descrição da oportunidade" className={inputClass} /></FormGroup>
         <FormRow>
           <FormGroup label="Origem"><select value={origem} onChange={e => setOrigem(e.target.value)} className={inputClass}>{ORIGENS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></FormGroup>
           <FormGroup label="VGV Bruto (R$)"><CurrencyInput value={vgv} onChange={setVgv} className={inputClass} /></FormGroup>
         </FormRow>
-        <div className="flex gap-3 justify-end mt-6"><Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button><Button onClick={handleSave}>Salvar</Button></div>
+        <div className="flex gap-3 justify-end mt-6"><Button variant="outline" onClick={resetForm}>Cancelar</Button><Button onClick={handleSave}>{editingId ? 'Atualizar' : 'Salvar'}</Button></div>
       </Modal>
       <Toast message={toast.message} isVisible={toast.visible} />
     </div>

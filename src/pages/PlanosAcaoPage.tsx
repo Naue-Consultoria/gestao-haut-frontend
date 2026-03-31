@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { FormGroup } from '../components/ui/FormGroup';
 import { FormRow } from '../components/ui/FormRow';
@@ -29,6 +29,7 @@ export default function PlanosAcaoPage() {
   const [planos, setPlanos] = useState<PlanoAcao[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [texto, setTexto] = useState('');
   const [prazo, setPrazo] = useState('');
@@ -71,19 +72,38 @@ export default function PlanosAcaoPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const resetForm = () => {
+    setModalOpen(false); setEditingId(null); setTexto(''); setPrazo(''); setStatus('PLANEJADO');
+  };
+
   const handleCreate = async () => {
     if (!texto.trim()) { showToast('Escreva a descricao da acao'); return; }
     try {
-      if (isParceriaSelected) {
-        await parceriasService.createPlanoAcao(selectedId, { texto, prazo, status, month, year });
+      if (editingId) {
+        if (isParceriaSelected) {
+          await parceriasService.updatePlanoAcao(editingId, { texto, prazo, status });
+        } else {
+          await planosAcaoService.update(editingId, { texto, prazo, status });
+        }
+        showToast('Plano de acao atualizado');
       } else {
-        await planosAcaoService.create(selectedId, { texto, prazo, status, month, year });
+        if (isParceriaSelected) {
+          await parceriasService.createPlanoAcao(selectedId, { texto, prazo, status, month, year });
+        } else {
+          await planosAcaoService.create(selectedId, { texto, prazo, status, month, year });
+        }
+        showToast('Plano de acao criado');
       }
-      setModalOpen(false);
-      setTexto(''); setPrazo(''); setStatus('PLANEJADO');
-      showToast('Plano de acao criado');
-      load();
+      resetForm(); load();
     } catch { showToast('Erro ao salvar'); }
+  };
+
+  const handleEdit = (p: PlanoAcao) => {
+    setEditingId(p.id);
+    setTexto(p.texto);
+    setPrazo(p.prazo || '');
+    setStatus(p.status);
+    setModalOpen(true);
   };
 
   const handleStatusChange = async (id: string, newStatus: string) => {
@@ -114,7 +134,7 @@ export default function PlanosAcaoPage() {
 
   return (
     <div>
-      <PageHeader title="Plano de Acao" description="Defina acoes e prazos para corretores e parcerias" action={<Button icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>Nova Acao</Button>} />
+      <PageHeader title="Plano de Acao" description="Defina acoes e prazos para corretores e parcerias" action={<Button icon={<Plus size={16} />} onClick={() => { resetForm(); setModalOpen(true); }}>Nova Acao</Button>} />
 
       <div className="flex items-center gap-4 mb-6 flex-wrap">
         <select
@@ -177,9 +197,10 @@ export default function PlanosAcaoPage() {
                     </select>
                   </td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100">
-                    <button onClick={() => handleDelete(p.id)} className="p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer">
-                      <Trash2 size={18} />
-                    </button>
+                    <div className="flex gap-1">
+                      <button onClick={() => handleEdit(p)} className="p-2 text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"><Pencil size={18} /></button>
+                      <button onClick={() => handleDelete(p.id)} className="p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"><Trash2 size={18} /></button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -188,7 +209,7 @@ export default function PlanosAcaoPage() {
         )}
       </DataSection>
 
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Nova Acao">
+      <Modal isOpen={modalOpen} onClose={resetForm} title={editingId ? 'Editar Acao' : 'Nova Acao'}>
         <FormGroup label="Descricao da Acao">
           <textarea value={texto} onChange={e => setTexto(e.target.value)} placeholder="Descreva a acao a ser realizada..." className={`${inputClass} min-h-[100px] resize-y`} />
         </FormGroup>
@@ -203,8 +224,8 @@ export default function PlanosAcaoPage() {
           </FormGroup>
         </FormRow>
         <div className="flex gap-3 justify-end mt-6">
-          <Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
-          <Button onClick={handleCreate}>Salvar</Button>
+          <Button variant="outline" onClick={resetForm}>Cancelar</Button>
+          <Button onClick={handleCreate}>{editingId ? 'Atualizar' : 'Salvar'}</Button>
         </div>
       </Modal>
 

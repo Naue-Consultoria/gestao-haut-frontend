@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { MonthTabs } from '../components/ui/MonthTabs';
 import { DataSection } from '../components/ui/DataSection';
@@ -24,6 +24,7 @@ export default function CaptacaoPage() {
   const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<Captacao[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [oportunidade, setOportunidade] = useState('');
@@ -43,17 +44,33 @@ export default function CaptacaoPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const resetForm = () => {
+    setModalOpen(false); setEditingId(null); setOportunidade(''); setExclusivo('NÃO'); setOrigem('RELACIONAMENTO'); setVgv('');
+  };
+
   const handleSave = async () => {
     if (!oportunidade) { showToast('Preencha a oportunidade'); return; }
     try {
-      const payload: any = { month, year, oportunidade, exclusivo, origem: origem as Captacao['origem'], vgv: Number(vgv) || 0 };
-      if (isGestor) payload.broker_id = getEffectiveBrokerId();
-      await captacoesService.create(payload);
-      setModalOpen(false);
-      setOportunidade(''); setExclusivo('NÃO'); setOrigem('RELACIONAMENTO'); setVgv('');
-      showToast('Captação registrada');
-      load();
+      if (editingId) {
+        await captacoesService.update(editingId, { oportunidade, exclusivo, origem, vgv: Number(vgv) || 0 });
+        showToast('Captação atualizada');
+      } else {
+        const payload: any = { month, year, oportunidade, exclusivo, origem: origem as Captacao['origem'], vgv: Number(vgv) || 0 };
+        if (isGestor) payload.broker_id = getEffectiveBrokerId();
+        await captacoesService.create(payload);
+        showToast('Captação registrada');
+      }
+      resetForm(); load();
     } catch { showToast('Erro ao salvar'); }
+  };
+
+  const handleEdit = (row: Captacao) => {
+    setEditingId(row.id);
+    setOportunidade(row.oportunidade);
+    setExclusivo(row.exclusivo);
+    setOrigem(row.origem);
+    setVgv(String(row.vgv));
+    setModalOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -65,7 +82,7 @@ export default function CaptacaoPage() {
 
   return (
     <div>
-      <PageHeader title="Quadro de Captação" description="Imóveis captados no mês" action={<Button icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>Registrar Captação</Button>} />
+      <PageHeader title="Quadro de Captação" description="Imóveis captados no mês" action={<Button icon={<Plus size={16} />} onClick={() => { resetForm(); setModalOpen(true); }}>Registrar Captação</Button>} />
 
       {isGestor && (
         <div className="flex items-center gap-4 mb-4">
@@ -105,7 +122,7 @@ export default function CaptacaoPage() {
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{row.exclusivo}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{row.origem}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{fmt(row.vgv)}</td>
-                  <td className="px-6 py-3.5 text-sm border-b border-gray-100"><Button variant="icon" size="sm" onClick={() => handleDelete(row.id)}><Trash2 size={18} /></Button></td>
+                  <td className="px-6 py-3.5 text-sm border-b border-gray-100 flex gap-1"><Button variant="icon" size="sm" onClick={() => handleEdit(row)}><Pencil size={18} /></Button><Button variant="icon" size="sm" onClick={() => handleDelete(row.id)}><Trash2 size={18} /></Button></td>
                 </tr>
               ))}
             </tbody>
@@ -113,14 +130,14 @@ export default function CaptacaoPage() {
         )}
       </DataSection>
 
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Registrar Captação">
+      <Modal isOpen={modalOpen} onClose={resetForm} title={editingId ? 'Editar Captação' : 'Registrar Captação'}>
         <FormGroup label="Oportunidade / Imóvel"><input type="text" value={oportunidade} onChange={e => setOportunidade(e.target.value)} placeholder="Nome do imóvel" className={inputClass} /></FormGroup>
         <FormRow>
           <FormGroup label="Exclusivo?"><select value={exclusivo} onChange={e => setExclusivo(e.target.value)} className={inputClass}><option>NÃO</option><option>SIM</option></select></FormGroup>
           <FormGroup label="Origem"><select value={origem} onChange={e => setOrigem(e.target.value)} className={inputClass}>{ORIGENS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></FormGroup>
         </FormRow>
         <FormGroup label="VGV Bruto (R$)"><CurrencyInput value={vgv} onChange={setVgv} className={inputClass} /></FormGroup>
-        <div className="flex gap-3 justify-end mt-6"><Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button><Button onClick={handleSave}>Salvar</Button></div>
+        <div className="flex gap-3 justify-end mt-6"><Button variant="outline" onClick={resetForm}>Cancelar</Button><Button onClick={handleSave}>{editingId ? 'Atualizar' : 'Salvar'}</Button></div>
       </Modal>
       <Toast message={toast.message} isVisible={toast.visible} />
     </div>

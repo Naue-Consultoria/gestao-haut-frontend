@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { MonthTabs } from '../components/ui/MonthTabs';
 import { DataSection } from '../components/ui/DataSection';
@@ -22,6 +22,7 @@ export default function TreinamentosPage() {
   const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<Treinamento[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [atividade, setAtividade] = useState('');
@@ -37,15 +38,32 @@ export default function TreinamentosPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const resetForm = () => {
+    setModalOpen(false); setEditingId(null); setAtividade(''); setLocal(''); setHoras('');
+  };
+
   const handleSave = async () => {
     if (!atividade) { showToast('Preencha a atividade'); return; }
     try {
-      const payload: any = { month, year, atividade, local, horas: Number(horas) || 0 };
-      if (isGestor) payload.broker_id = getEffectiveBrokerId();
-      await treinamentosService.create(payload);
-      setModalOpen(false); setAtividade(''); setLocal(''); setHoras('');
-      showToast('Participação registrada'); load();
+      if (editingId) {
+        await treinamentosService.update(editingId, { atividade, local, horas: Number(horas) || 0 });
+        showToast('Participação atualizada');
+      } else {
+        const payload: any = { month, year, atividade, local, horas: Number(horas) || 0 };
+        if (isGestor) payload.broker_id = getEffectiveBrokerId();
+        await treinamentosService.create(payload);
+        showToast('Participação registrada');
+      }
+      resetForm(); load();
     } catch { showToast('Erro ao salvar'); }
+  };
+
+  const handleEdit = (row: Treinamento) => {
+    setEditingId(row.id);
+    setAtividade(row.atividade);
+    setLocal(row.local);
+    setHoras(String(row.horas));
+    setModalOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -57,7 +75,7 @@ export default function TreinamentosPage() {
 
   return (
     <div>
-      <PageHeader title="Treinamentos e Ações" description="Participação em reuniões, treinamentos e plantões" action={<Button icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>Registrar Participação</Button>} />
+      <PageHeader title="Treinamentos e Ações" description="Participação em reuniões, treinamentos e plantões" action={<Button icon={<Plus size={16} />} onClick={() => { resetForm(); setModalOpen(true); }}>Registrar Participação</Button>} />
 
       {isGestor && (
         <div className="flex items-center gap-4 mb-4">
@@ -95,7 +113,7 @@ export default function TreinamentosPage() {
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{row.atividade}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{row.local}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{row.horas}h</td>
-                  <td className="px-6 py-3.5 text-sm border-b border-gray-100"><Button variant="icon" size="sm" onClick={() => handleDelete(row.id)}><Trash2 size={18} /></Button></td>
+                  <td className="px-6 py-3.5 text-sm border-b border-gray-100 flex gap-1"><Button variant="icon" size="sm" onClick={() => handleEdit(row)}><Pencil size={18} /></Button><Button variant="icon" size="sm" onClick={() => handleDelete(row.id)}><Trash2 size={18} /></Button></td>
                 </tr>
               ))}
             </tbody>
@@ -103,13 +121,13 @@ export default function TreinamentosPage() {
         )}
       </DataSection>
 
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Registrar Participação">
+      <Modal isOpen={modalOpen} onClose={resetForm} title={editingId ? 'Editar Participação' : 'Registrar Participação'}>
         <FormGroup label="Atividade"><input type="text" value={atividade} onChange={e => setAtividade(e.target.value)} placeholder="Nome da atividade" className={inputClass} /></FormGroup>
         <FormRow>
           <FormGroup label="Local"><input type="text" value={local} onChange={e => setLocal(e.target.value)} placeholder="Local ou online" className={inputClass} /></FormGroup>
           <FormGroup label="Carga Horária (horas)"><input type="number" value={horas} onChange={e => setHoras(e.target.value)} placeholder="0" step="0.5" className={inputClass} /></FormGroup>
         </FormRow>
-        <div className="flex gap-3 justify-end mt-6"><Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button><Button onClick={handleSave}>Salvar</Button></div>
+        <div className="flex gap-3 justify-end mt-6"><Button variant="outline" onClick={resetForm}>Cancelar</Button><Button onClick={handleSave}>{editingId ? 'Atualizar' : 'Salvar'}</Button></div>
       </Modal>
       <Toast message={toast.message} isVisible={toast.visible} />
     </div>

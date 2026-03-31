@@ -8,6 +8,8 @@ export const investimentosService = {
   },
   create: (data: Omit<Investimento, 'id' | 'broker_id'> & { broker_id?: string }) =>
     api.post('/investimentos', data),
+  update: (id: string, data: { tipo: string; produto: string; valor: number; leads: number }) =>
+    api.put(`/investimentos/${id}`, data),
   delete: (id: string) =>
     api.delete(`/investimentos/${id}`),
 };

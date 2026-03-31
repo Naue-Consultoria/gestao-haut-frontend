@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { MonthTabs } from '../components/ui/MonthTabs';
 import { StatsGrid } from '../components/ui/StatsGrid';
@@ -26,6 +26,7 @@ export default function InvestimentosPage() {
   const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<Investimento[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [tipo, setTipo] = useState('PORTAL');
@@ -45,14 +46,32 @@ export default function InvestimentosPage() {
   const totalValor = data.reduce((s, i) => s + Number(i.valor), 0);
   const totalLeads = data.reduce((s, i) => s + Number(i.leads), 0);
 
+  const resetForm = () => {
+    setModalOpen(false); setEditingId(null); setTipo('PORTAL'); setProduto(''); setValor(''); setLeads('');
+  };
+
   const handleSave = async () => {
     try {
-      const payload: any = { month, year, tipo: tipo as Investimento['tipo'], produto, valor: Number(valor) || 0, leads: Number(leads) || 0 };
-      if (isGestor) payload.broker_id = getEffectiveBrokerId();
-      await investimentosService.create(payload);
-      setModalOpen(false); setTipo('PORTAL'); setProduto(''); setValor(''); setLeads('');
-      showToast('Investimento registrado'); load();
+      if (editingId) {
+        await investimentosService.update(editingId, { tipo, produto, valor: Number(valor) || 0, leads: Number(leads) || 0 });
+        showToast('Investimento atualizado');
+      } else {
+        const payload: any = { month, year, tipo: tipo as Investimento['tipo'], produto, valor: Number(valor) || 0, leads: Number(leads) || 0 };
+        if (isGestor) payload.broker_id = getEffectiveBrokerId();
+        await investimentosService.create(payload);
+        showToast('Investimento registrado');
+      }
+      resetForm(); load();
     } catch { showToast('Erro ao salvar'); }
+  };
+
+  const handleEdit = (row: Investimento) => {
+    setEditingId(row.id);
+    setTipo(row.tipo);
+    setProduto(row.produto);
+    setValor(String(row.valor));
+    setLeads(String(row.leads));
+    setModalOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -64,7 +83,7 @@ export default function InvestimentosPage() {
 
   return (
     <div>
-      <PageHeader title="Investimentos" description="Portais, patrocinados e outras ações" action={<Button icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>Registrar Investimento</Button>} />
+      <PageHeader title="Investimentos" description="Portais, patrocinados e outras ações" action={<Button icon={<Plus size={16} />} onClick={() => { resetForm(); setModalOpen(true); }}>Registrar Investimento</Button>} />
 
       {isGestor && (
         <div className="flex items-center gap-4 mb-4">
@@ -110,7 +129,7 @@ export default function InvestimentosPage() {
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{row.produto}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{fmt(row.valor)}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{row.leads}</td>
-                  <td className="px-6 py-3.5 text-sm border-b border-gray-100"><Button variant="icon" size="sm" onClick={() => handleDelete(row.id)}><Trash2 size={18} /></Button></td>
+                  <td className="px-6 py-3.5 text-sm border-b border-gray-100 flex gap-1"><Button variant="icon" size="sm" onClick={() => handleEdit(row)}><Pencil size={18} /></Button><Button variant="icon" size="sm" onClick={() => handleDelete(row.id)}><Trash2 size={18} /></Button></td>
                 </tr>
               ))}
             </tbody>
@@ -118,7 +137,7 @@ export default function InvestimentosPage() {
         )}
       </DataSection>
 
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Registrar Investimento">
+      <Modal isOpen={modalOpen} onClose={resetForm} title={editingId ? 'Editar Investimento' : 'Registrar Investimento'}>
         <FormRow>
           <FormGroup label="Tipo"><select value={tipo} onChange={e => setTipo(e.target.value)} className={inputClass}>{INVESTIMENTO_TIPOS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select></FormGroup>
           <FormGroup label="Produto / Descrição"><input type="text" value={produto} onChange={e => setProduto(e.target.value)} placeholder="Descrição" className={inputClass} /></FormGroup>
@@ -127,7 +146,7 @@ export default function InvestimentosPage() {
           <FormGroup label="Valor Investido (R$)"><CurrencyInput value={valor} onChange={setValor} className={inputClass} /></FormGroup>
           <FormGroup label="Leads Gerados"><input type="number" value={leads} onChange={e => setLeads(e.target.value)} placeholder="0" className={inputClass} /></FormGroup>
         </FormRow>
-        <div className="flex gap-3 justify-end mt-6"><Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button><Button onClick={handleSave}>Salvar</Button></div>
+        <div className="flex gap-3 justify-end mt-6"><Button variant="outline" onClick={resetForm}>Cancelar</Button><Button onClick={handleSave}>{editingId ? 'Atualizar' : 'Salvar'}</Button></div>
       </Modal>
       <Toast message={toast.message} isVisible={toast.visible} />
     </div>
