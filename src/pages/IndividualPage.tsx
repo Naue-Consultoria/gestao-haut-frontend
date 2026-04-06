@@ -25,6 +25,7 @@ export default function IndividualPage() {
   const [evolution, setEvolution] = useState<{ month: number; meta: number; realizado: number }[]>([]);
   const [yearly, setYearly] = useState<DashboardIndividualYearly | null>(null);
   const [loading, setLoading] = useState(true);
+  const [yearlyLoading, setYearlyLoading] = useState(false);
 
   useEffect(() => {
     if (user?.role === 'gestor') {
@@ -47,16 +48,27 @@ export default function IndividualPage() {
     const effectiveId = getEffectiveId();
     if (!effectiveId) return;
     setEvolution([]);
-    setYearly(null);
     dashboardService.yearlyEvolution(effectiveId, year)
       .then(setEvolution)
       .catch(console.error);
-    dashboardService.individualYearly(effectiveId, year)
-      .then(setYearly)
-      .catch(console.error);
   }, [selectedBrokerId, year, parcerias]);
 
+  // Fetch yearly consolidated only when "Ano" tab is active
   useEffect(() => {
+    if (month !== -1) return;
+    const effectiveId = getEffectiveId();
+    if (!effectiveId) return;
+    setYearlyLoading(true);
+    setYearly(null);
+    dashboardService.individualYearly(effectiveId, year)
+      .then(setYearly)
+      .catch(console.error)
+      .finally(() => setYearlyLoading(false));
+  }, [selectedBrokerId, year, parcerias, month]);
+
+  // Fetch monthly data only when a specific month is selected
+  useEffect(() => {
+    if (month === -1) return;
     const effectiveId = getEffectiveId();
     if (!effectiveId) return;
     setLoading(true);
@@ -106,7 +118,9 @@ export default function IndividualPage() {
       <MonthTabs activeMonth={month} onSelect={setMonth} activeYear={year} onYearChange={setYear} showYearlyTab />
 
       {month === -1 ? (
-        yearly ? (
+        yearlyLoading ? (
+          <div className="text-center py-16 text-gray-400">Carregando...</div>
+        ) : yearly ? (
           <>
             <StatsGrid>
               <StatCard
@@ -144,7 +158,7 @@ export default function IndividualPage() {
             </DataSection>
           </>
         ) : (
-          <div className="text-center py-16 text-gray-400">Carregando...</div>
+          <div className="text-center py-16 text-gray-400">Nenhum dado encontrado</div>
         )
       ) : loading ? (
         <div className="text-center py-16 text-gray-400">Carregando...</div>
