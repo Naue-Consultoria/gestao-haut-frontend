@@ -103,9 +103,50 @@ export default function IndividualPage() {
         </div>
       )}
 
-      <MonthTabs activeMonth={month} onSelect={setMonth} activeYear={year} onYearChange={setYear} />
+      <MonthTabs activeMonth={month} onSelect={setMonth} activeYear={year} onYearChange={setYear} showYearlyTab />
 
-      {loading ? (
+      {month === -1 ? (
+        yearly ? (
+          <>
+            <StatsGrid>
+              <StatCard
+                label={`VGV Realizado — ${year}`}
+                value={fmt(yearly.vgvRealizado)}
+                change={`Meta: ${fmt(yearly.metaVGVAnual)}`}
+                changeType={yearly.vgvRealizado >= yearly.metaVGVAnual ? 'positive' : 'negative'}
+              />
+              <StatCard label="Captações" value={String(yearly.captacoes)} change={`Meta: ${yearly.metaCaptacoes}`} changeType={yearly.captacoes >= yearly.metaCaptacoes ? 'positive' : 'negative'} />
+              <StatCard label="Positivações" value={String(yearly.positivacoes)} change={`Meta: ${yearly.metaPositivacao}`} changeType={yearly.positivacoes >= yearly.metaPositivacao ? 'positive' : 'negative'} />
+              <StatCard label="Comissão Total" value={fmt(yearly.comissaoTotal)} />
+            </StatsGrid>
+
+            <BarChart data={chartData} title="Evolução Mensal — Meta × Realizado" />
+
+            <DataSection title={`Efetividade — Consolidado ${year}`}>
+              <div className="p-6 space-y-4">
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">Captações: {yearly.captacoes} / {yearly.metaCaptacoes}</div>
+                  <ProgressBar percentage={yearly.metaCaptacoes > 0 ? (yearly.captacoes / yearly.metaCaptacoes) * 100 : 0} />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">Negócios Levantados: {fmt(yearly.negociosVGV)} / {fmt(yearly.metaNegocios)}</div>
+                  <ProgressBar percentage={yearly.metaNegocios > 0 ? (yearly.negociosVGV / yearly.metaNegocios) * 100 : 0} />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">Treinamento: {yearly.treinamentoHoras}h / {yearly.metaTreinamento}h</div>
+                  <ProgressBar percentage={yearly.metaTreinamento > 0 ? (yearly.treinamentoHoras / yearly.metaTreinamento) * 100 : 0} />
+                </div>
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">Investimento: {fmt(yearly.investimentoValor)} / {fmt(yearly.metaInvestimento)}</div>
+                  <ProgressBar percentage={yearly.metaInvestimento > 0 ? (yearly.investimentoValor / yearly.metaInvestimento) * 100 : 0} />
+                </div>
+              </div>
+            </DataSection>
+          </>
+        ) : (
+          <div className="text-center py-16 text-gray-400">Carregando...</div>
+        )
+      ) : loading ? (
         <div className="text-center py-16 text-gray-400">Carregando...</div>
       ) : data && (
         <>
@@ -143,56 +184,6 @@ export default function IndividualPage() {
               </div>
             </div>
           </DataSection>
-
-          {yearly && (
-            <DataSection title={`Consolidado do Ano — ${year}`}>
-              <div className="p-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-gray-50 rounded-sm p-4">
-                    <div className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 mb-1">VGV Total</div>
-                    <div className="text-lg font-semibold text-gray-900">{fmt(yearly.vgvRealizado)}</div>
-                    <div className="text-xs text-gray-500 mt-1">Meta: {fmt(yearly.metaVGVAnual)}</div>
-                  </div>
-                  <div className="bg-gray-50 rounded-sm p-4">
-                    <div className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 mb-1">Captações</div>
-                    <div className="text-lg font-semibold text-gray-900">{yearly.captacoes}</div>
-                    <div className="text-xs text-gray-500 mt-1">Meta: {yearly.metaCaptacoes}</div>
-                  </div>
-                  <div className="bg-gray-50 rounded-sm p-4">
-                    <div className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 mb-1">Negócios Levantados</div>
-                    <div className="text-lg font-semibold text-gray-900">{fmt(yearly.negociosVGV)}</div>
-                    <div className="text-xs text-gray-500 mt-1">Meta: {fmt(yearly.metaNegocios)}</div>
-                  </div>
-                  <div className="bg-gray-50 rounded-sm p-4">
-                    <div className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 mb-1">Positivações</div>
-                    <div className="text-lg font-semibold text-gray-900">{yearly.positivacoes}</div>
-                    <div className="text-xs text-gray-500 mt-1">Meta: {yearly.metaPositivacao}</div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-gray-50 rounded-sm p-4">
-                    <div className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 mb-1">Horas Treinamento</div>
-                    <div className="text-lg font-semibold text-gray-900">{yearly.treinamentoHoras}h</div>
-                    <div className="text-xs text-gray-500 mt-1">Meta: {yearly.metaTreinamento}h</div>
-                  </div>
-                  <div className="bg-gray-50 rounded-sm p-4">
-                    <div className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 mb-1">Investimentos</div>
-                    <div className="text-lg font-semibold text-gray-900">{fmt(yearly.investimentoValor)}</div>
-                    <div className="text-xs text-gray-500 mt-1">Meta: {fmt(yearly.metaInvestimento)}</div>
-                  </div>
-                  <div className="bg-gray-50 rounded-sm p-4">
-                    <div className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 mb-1">Comissão Total</div>
-                    <div className="text-lg font-semibold text-gray-900">{fmt(yearly.comissaoTotal)}</div>
-                  </div>
-                  <div className="bg-gray-50 rounded-sm p-4">
-                    <div className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 mb-1">Capt. Exclusivas</div>
-                    <div className="text-lg font-semibold text-gray-900">{yearly.captExclusivas}</div>
-                    <div className="text-xs text-gray-500 mt-1">Meta: {yearly.metaCaptExclusivas}</div>
-                  </div>
-                </div>
-              </div>
-            </DataSection>
-          )}
 
           {data.comentario && (
             <CommentBox author="Comentário do Gestor" text={data.comentario} />

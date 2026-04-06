@@ -6,9 +6,10 @@ interface MonthTabsProps {
   onSelect: (month: number) => void;
   activeYear?: number;
   onYearChange?: (year: number) => void;
+  showYearlyTab?: boolean;
 }
 
-export function MonthTabs({ activeMonth, onSelect, activeYear = CURRENT_YEAR, onYearChange }: MonthTabsProps) {
+export function MonthTabs({ activeMonth, onSelect, activeYear = CURRENT_YEAR, onYearChange, showYearlyTab }: MonthTabsProps) {
   return (
     <div className="mb-6">
       {onYearChange && (
@@ -45,6 +46,18 @@ export function MonthTabs({ activeMonth, onSelect, activeYear = CURRENT_YEAR, on
             {m}
           </button>
         ))}
+        {showYearlyTab && (
+          <button
+            onClick={() => onSelect(-1)}
+            className={`px-4 py-2.5 rounded-[6px] text-xs font-semibold cursor-pointer transition-all duration-300 whitespace-nowrap font-main ${
+              activeMonth === -1
+                ? 'bg-white text-black shadow border-b-2 border-accent'
+                : 'bg-transparent text-gray-500 hover:text-black border-b-2 border-transparent'
+            }`}
+          >
+            Ano
+          </button>
+        )}
       </div>
     </div>
   );
