@@ -38,8 +38,8 @@ export function AppRouter() {
           <Route path="investimentos" element={<InvestimentosPage />} />
           <Route path="ranking" element={<GestorRoute><RankingPage /></GestorRoute>} />
           <Route path="metas" element={<GestorRoute><MetasPage /></GestorRoute>} />
-          <Route path="comentarios" element={<GestorRoute><ComentariosPage /></GestorRoute>} />
-          <Route path="planos-acao" element={<GestorRoute><PlanosAcaoPage /></GestorRoute>} />
+          <Route path="comentarios" element={<ComentariosPage />} />
+          <Route path="planos-acao" element={<PlanosAcaoPage />} />
           <Route path="parcerias" element={<GestorRoute><ParceriasPage /></GestorRoute>} />
           <Route path="usuarios" element={<GestorRoute><UsuariosPage /></GestorRoute>} />
           <Route path="relatorios" element={<GestorRoute><RelatoriosPage /></GestorRoute>} />

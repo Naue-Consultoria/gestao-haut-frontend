@@ -23,12 +23,12 @@ const diarioNav = [
 ];
 
 const gestaoNav = [
-  { path: '/metas', label: 'Definir Metas', icon: Target },
+  { path: '/metas', label: 'Definir Metas', icon: Target, gestorOnly: true },
   { path: '/comentarios', label: 'Comentários', icon: MessageSquare },
   { path: '/planos-acao', label: 'Plano de Ação', icon: ClipboardList },
-  { path: '/parcerias', label: 'Parcerias', icon: UserPlus },
-  { path: '/usuarios', label: 'Usuários', icon: Users },
-  { path: '/relatorios', label: 'Relatórios', icon: FileText },
+  { path: '/parcerias', label: 'Parcerias', icon: UserPlus, gestorOnly: true },
+  { path: '/usuarios', label: 'Usuários', icon: Users, gestorOnly: true },
+  { path: '/relatorios', label: 'Relatórios', icon: FileText, gestorOnly: true },
 ];
 
 interface SidebarProps {
@@ -121,12 +121,17 @@ export function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: Sideba
         <SectionLabel label="Diário de Bordo" />
         {diarioNav.map(item => <NavItem key={item.path} {...item} />)}
 
-        {user?.role === 'gestor' && (
-          <>
-            <SectionLabel label="Gestão" />
-            {gestaoNav.map(item => <NavItem key={item.path} {...item} />)}
-          </>
-        )}
+        {(() => {
+          const isGestor = user?.role === 'gestor';
+          const items = gestaoNav.filter(item => !('gestorOnly' in item && item.gestorOnly) || isGestor);
+          if (items.length === 0) return null;
+          return (
+            <>
+              <SectionLabel label={isGestor ? "Gestão" : "Acompanhamento"} />
+              {items.map(item => <NavItem key={item.path} {...item} />)}
+            </>
+          );
+        })()}
       </div>
 
       {/* User section */}

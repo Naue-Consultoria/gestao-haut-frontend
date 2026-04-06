@@ -1,5 +1,5 @@
 import api from '../config/api';
-import { DashboardConsolidated, DashboardIndividual, RankingItem } from '../types';
+import { DashboardConsolidated, DashboardIndividual, DashboardIndividualYearly, RankingItem } from '../types';
 
 export const dashboardService = {
   consolidated: async (month: number, year: number): Promise<DashboardConsolidated> => {
@@ -16,6 +16,10 @@ export const dashboardService = {
   },
   yearlyEvolution: async (brokerId: string, year: number): Promise<{ month: number; meta: number; realizado: number }[]> => {
     const res = await api.get(`/dashboard/individual/${brokerId}/evolution`, { params: { year } });
+    return res.data.data;
+  },
+  individualYearly: async (brokerId: string, year: number): Promise<DashboardIndividualYearly> => {
+    const res = await api.get(`/dashboard/individual/${brokerId}/yearly`, { params: { year } });
     return res.data.data;
   },
   ranking: async (month: number, year: number): Promise<RankingItem[]> => {

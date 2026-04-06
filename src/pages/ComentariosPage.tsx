@@ -4,6 +4,7 @@ import { FormGroup } from '../components/ui/FormGroup';
 import { Button } from '../components/ui/Button';
 import { Toast } from '../components/ui/Toast';
 import { useBrokerSelector } from '../hooks/useBrokerSelector';
+import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import { comentariosService } from '../services/comentarios.service';
 import { parceriasService } from '../services/parcerias.service';
@@ -13,6 +14,8 @@ import { Modal } from '../components/ui/Modal';
 import { Pencil, Trash2 } from 'lucide-react';
 
 export default function ComentariosPage() {
+  const { user } = useAuth();
+  const isGestor = user?.role === 'gestor';
   const { brokers, selectedBrokerId } = useBrokerSelector();
   const { toast, showToast } = useToast();
   const [month, setMonth] = useState(0);
@@ -30,23 +33,39 @@ export default function ComentariosPage() {
     parceriasService.getActive().then(setParcerias).catch(console.error);
   }, []);
 
+  // For corretor: filter parcerias to only those they belong to
+  const visibleParcerias = isGestor
+    ? parcerias
+    : parcerias.filter(p => (p.parceria_membros || []).some(m => m.broker_id === user?.id));
+
   // Sync selectedId with first available option
   useEffect(() => {
     if (selectedId) return;
-    if (parcerias.length > 0) {
-      setSelectedId(parcerias[0].id);
-    } else if (selectedBrokerId) {
-      setSelectedId(selectedBrokerId);
+    if (isGestor) {
+      if (parcerias.length > 0) {
+        setSelectedId(parcerias[0].id);
+      } else if (selectedBrokerId) {
+        setSelectedId(selectedBrokerId);
+      }
+    } else {
+      // Corretor: prefer their parceria, otherwise their own ID
+      if (visibleParcerias.length > 0) {
+        setSelectedId(visibleParcerias[0].id);
+      } else if (user?.id) {
+        setSelectedId(user.id);
+      }
     }
-  }, [parcerias, selectedBrokerId]);
+  }, [parcerias, selectedBrokerId, isGestor, visibleParcerias, user]);
 
   // Brokers in partnerships (excluded from solo list)
   const brokersInParcerias = new Set(
     parcerias.flatMap(p => (p.parceria_membros || []).map(m => m.broker_id))
   );
-  const soloBrokers = brokers.filter(b => !brokersInParcerias.has(b.id));
+  const soloBrokers = isGestor
+    ? brokers.filter(b => !brokersInParcerias.has(b.id))
+    : brokers.filter(b => b.id === user?.id && !brokersInParcerias.has(b.id));
 
-  const isParceriaSelected = parcerias.some(p => p.id === selectedId);
+  const isParceriaSelected = visibleParcerias.some(p => p.id === selectedId);
 
   const loadData = useCallback(async () => {
     if (!selectedId) return;
@@ -136,27 +155,34 @@ export default function ComentariosPage() {
 
   return (
     <div>
-      <PageHeader title="Comentários do Gestor" description="Feedback mensal para corretores e parcerias" />
+      <PageHeader
+        title={isGestor ? "Comentários do Gestor" : "Comentários"}
+        description={isGestor ? "Feedback mensal para corretores e parcerias" : "Feedback mensal do gestor"}
+      />
 
       <div className="flex items-center gap-4 mb-6 flex-wrap">
-        <select
-          value={selectedId}
-          onChange={e => setSelectedId(e.target.value)}
-          className="px-4 py-2.5 bg-white border border-gray-200 rounded-sm font-main text-sm outline-none cursor-pointer min-w-[200px]"
-        >
-          {parcerias.length > 0 && (
-            <optgroup label="Parcerias">
-              {parcerias.map(p => (
-                <option key={p.id} value={p.id}>{p.nome}</option>
-              ))}
-            </optgroup>
-          )}
-          <optgroup label="Corretores">
-            {soloBrokers.map(b => (
-              <option key={b.id} value={b.id}>{b.name} — {b.team}</option>
-            ))}
-          </optgroup>
-        </select>
+        {(isGestor || visibleParcerias.length + soloBrokers.length > 1) && (
+          <select
+            value={selectedId}
+            onChange={e => setSelectedId(e.target.value)}
+            className="px-4 py-2.5 bg-white border border-gray-200 rounded-sm font-main text-sm outline-none cursor-pointer min-w-[200px]"
+          >
+            {visibleParcerias.length > 0 && (
+              <optgroup label="Parcerias">
+                {visibleParcerias.map(p => (
+                  <option key={p.id} value={p.id}>{p.nome}</option>
+                ))}
+              </optgroup>
+            )}
+            {soloBrokers.length > 0 && (
+              <optgroup label={isGestor ? "Corretores" : "Individual"}>
+                {soloBrokers.map(b => (
+                  <option key={b.id} value={b.id}>{b.name} — {b.team}</option>
+                ))}
+              </optgroup>
+            )}
+          </select>
+        )}
         <select value={month} onChange={e => setMonth(Number(e.target.value))} className="px-4 py-2.5 bg-white border border-gray-200 rounded-sm font-main text-sm outline-none cursor-pointer">
           {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
         </select>
@@ -167,19 +193,21 @@ export default function ComentariosPage() {
         </select>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-[12px] p-8 mb-6">
-        <FormGroup label={editingId ? `Editando comentário — ${MONTHS[month]} ${year}` : 'Comentário do Diretor / Gente e Gestão'}>
-          <textarea value={texto} onChange={e => setTexto(e.target.value)} placeholder="Escreva seu feedback sobre a performance neste mês..." className={inputClass} />
-        </FormGroup>
-        <div className="flex gap-3">
-          <Button onClick={handleSave} disabled={loading}>{loading ? 'Salvando...' : 'Salvar Comentário'}</Button>
-          {editingId && (
-            <button onClick={handleCancel} className="px-4 py-2 text-sm font-main text-gray-500 hover:text-gray-700 transition-colors">
-              Cancelar edição
-            </button>
-          )}
+      {isGestor && (
+        <div className="bg-white border border-gray-200 rounded-[12px] p-8 mb-6">
+          <FormGroup label={editingId ? `Editando comentário — ${MONTHS[month]} ${year}` : 'Comentário do Diretor / Gente e Gestão'}>
+            <textarea value={texto} onChange={e => setTexto(e.target.value)} placeholder="Escreva seu feedback sobre a performance neste mês..." className={inputClass} />
+          </FormGroup>
+          <div className="flex gap-3">
+            <Button onClick={handleSave} disabled={loading}>{loading ? 'Salvando...' : 'Salvar Comentário'}</Button>
+            {editingId && (
+              <button onClick={handleCancel} className="px-4 py-2 text-sm font-main text-gray-500 hover:text-gray-700 transition-colors">
+                Cancelar edição
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {history.filter(c => c.texto).map(c => (
         <div key={c.id} className="group bg-gray-50 border-l-[3px] border-l-black py-5 px-6 rounded-r-sm mx-6 mb-6 relative">
@@ -187,14 +215,16 @@ export default function ComentariosPage() {
             <div className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">
               {MONTHS[c.month]} {c.year} — {c.gestor?.name || 'Gestor'}
             </div>
-            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={() => handleEdit(c)} className="p-2 text-gray-400 hover:text-gray-700 transition-colors" title="Editar">
-                <Pencil size={18} />
-              </button>
-              <button onClick={() => setDeleteTarget(c)} className="p-2 text-gray-400 hover:text-red-500 transition-colors" title="Excluir">
-                <Trash2 size={18} />
-              </button>
-            </div>
+            {isGestor && (
+              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => handleEdit(c)} className="p-2 text-gray-400 hover:text-gray-700 transition-colors" title="Editar">
+                  <Pencil size={18} />
+                </button>
+                <button onClick={() => setDeleteTarget(c)} className="p-2 text-gray-400 hover:text-red-500 transition-colors" title="Excluir">
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            )}
           </div>
           <div className="text-sm leading-relaxed text-gray-700">{c.texto}</div>
         </div>

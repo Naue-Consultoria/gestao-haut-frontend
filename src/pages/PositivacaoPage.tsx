@@ -164,7 +164,7 @@ export default function PositivacaoPage() {
         <FormRow>
           <FormGroup label="Parceria?">
             <select value={parceria} onChange={e => setParceria(e.target.value)} className={inputClass}>
-              <option>NÃO</option><option>SIM</option>
+              <option>NÃO</option><option>PARCERIA INTERNA</option><option>PARCERIA EXTERNA</option>
             </select>
           </FormGroup>
           <FormGroup label="VGV Líquido (R$)">

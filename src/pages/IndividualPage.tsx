@@ -13,7 +13,7 @@ import { dashboardService } from '../services/dashboard.service';
 import { parceriasService } from '../services/parcerias.service';
 import { MONTHS, CURRENT_YEAR } from '../config/constants';
 import { fmt } from '../utils/formatters';
-import { DashboardIndividual, Parceria } from '../types';
+import { DashboardIndividual, DashboardIndividualYearly, Parceria } from '../types';
 
 export default function IndividualPage() {
   const { user } = useAuth();
@@ -23,6 +23,7 @@ export default function IndividualPage() {
   const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<DashboardIndividual | null>(null);
   const [evolution, setEvolution] = useState<{ month: number; meta: number; realizado: number }[]>([]);
+  const [yearly, setYearly] = useState<DashboardIndividualYearly | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,8 +47,12 @@ export default function IndividualPage() {
     const effectiveId = getEffectiveId();
     if (!effectiveId) return;
     setEvolution([]);
+    setYearly(null);
     dashboardService.yearlyEvolution(effectiveId, year)
       .then(setEvolution)
+      .catch(console.error);
+    dashboardService.individualYearly(effectiveId, year)
+      .then(setYearly)
       .catch(console.error);
   }, [selectedBrokerId, year, parcerias]);
 
@@ -125,6 +130,10 @@ export default function IndividualPage() {
                 <ProgressBar percentage={data.metaCaptacoes > 0 ? (data.captacoes / data.metaCaptacoes) * 100 : 0} />
               </div>
               <div>
+                <div className="text-sm text-gray-600 mb-1">Negócios Levantados: {fmt(data.negociosVGV)} / {fmt(data.metaNegocios)}</div>
+                <ProgressBar percentage={data.metaNegocios > 0 ? (data.negociosVGV / data.metaNegocios) * 100 : 0} />
+              </div>
+              <div>
                 <div className="text-sm text-gray-600 mb-1">Treinamento: {data.treinamentoHoras}h / {data.metaTreinamento}h</div>
                 <ProgressBar percentage={data.metaTreinamento > 0 ? (data.treinamentoHoras / data.metaTreinamento) * 100 : 0} />
               </div>
@@ -134,6 +143,56 @@ export default function IndividualPage() {
               </div>
             </div>
           </DataSection>
+
+          {yearly && (
+            <DataSection title={`Consolidado do Ano — ${year}`}>
+              <div className="p-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-gray-50 rounded-sm p-4">
+                    <div className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 mb-1">VGV Total</div>
+                    <div className="text-lg font-semibold text-gray-900">{fmt(yearly.vgvRealizado)}</div>
+                    <div className="text-xs text-gray-500 mt-1">Meta: {fmt(yearly.metaVGVAnual)}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-sm p-4">
+                    <div className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 mb-1">Captações</div>
+                    <div className="text-lg font-semibold text-gray-900">{yearly.captacoes}</div>
+                    <div className="text-xs text-gray-500 mt-1">Meta: {yearly.metaCaptacoes}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-sm p-4">
+                    <div className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 mb-1">Negócios Levantados</div>
+                    <div className="text-lg font-semibold text-gray-900">{fmt(yearly.negociosVGV)}</div>
+                    <div className="text-xs text-gray-500 mt-1">Meta: {fmt(yearly.metaNegocios)}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-sm p-4">
+                    <div className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 mb-1">Positivações</div>
+                    <div className="text-lg font-semibold text-gray-900">{yearly.positivacoes}</div>
+                    <div className="text-xs text-gray-500 mt-1">Meta: {yearly.metaPositivacao}</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-gray-50 rounded-sm p-4">
+                    <div className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 mb-1">Horas Treinamento</div>
+                    <div className="text-lg font-semibold text-gray-900">{yearly.treinamentoHoras}h</div>
+                    <div className="text-xs text-gray-500 mt-1">Meta: {yearly.metaTreinamento}h</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-sm p-4">
+                    <div className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 mb-1">Investimentos</div>
+                    <div className="text-lg font-semibold text-gray-900">{fmt(yearly.investimentoValor)}</div>
+                    <div className="text-xs text-gray-500 mt-1">Meta: {fmt(yearly.metaInvestimento)}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-sm p-4">
+                    <div className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 mb-1">Comissão Total</div>
+                    <div className="text-lg font-semibold text-gray-900">{fmt(yearly.comissaoTotal)}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-sm p-4">
+                    <div className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 mb-1">Capt. Exclusivas</div>
+                    <div className="text-lg font-semibold text-gray-900">{yearly.captExclusivas}</div>
+                    <div className="text-xs text-gray-500 mt-1">Meta: {yearly.metaCaptExclusivas}</div>
+                  </div>
+                </div>
+              </div>
+            </DataSection>
+          )}
 
           {data.comentario && (
             <CommentBox author="Comentário do Gestor" text={data.comentario} />

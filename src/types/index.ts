@@ -1,5 +1,5 @@
 export type UserRole = 'corretor' | 'gestor';
-export type OrigemType = 'RELACIONAMENTO' | 'PATROCINADO' | 'CORRETOR_EXTERNO' | 'CORRETOR_INTERNO' | 'PORTAL';
+export type OrigemType = 'RELACIONAMENTO' | 'PATROCINADO' | 'CORRETOR_EXTERNO' | 'CORRETOR_INTERNO' | 'PORTAL' | 'PLANTAO_HAUT' | 'GRUPO_CORRETORES_WHATSAPP';
 export type InvestimentoType = 'PORTAL' | 'PATROCINADO' | 'CURSO' | 'NETWORKING' | 'PRESENTE_CLIENTE' | 'BRINDE' | 'OUTRO';
 
 export interface User {
@@ -181,6 +181,26 @@ export interface DashboardIndividual {
   metaPositivacao: number;
   comissaoTotal: number;
   comentario?: string;
+}
+
+export interface DashboardIndividualYearly {
+  broker: { id: string; name: string; team: string };
+  isParceria?: boolean;
+  vgvRealizado: number;
+  metaVGVAnual: number;
+  captacoes: number;
+  metaCaptacoes: number;
+  captExclusivas: number;
+  metaCaptExclusivas: number;
+  negociosVGV: number;
+  metaNegocios: number;
+  treinamentoHoras: number;
+  metaTreinamento: number;
+  investimentoValor: number;
+  metaInvestimento: number;
+  positivacoes: number;
+  metaPositivacao: number;
+  comissaoTotal: number;
 }
 
 export interface RankingItem {

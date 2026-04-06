@@ -15,6 +15,23 @@ import { treinamentosService } from '../services/treinamentos.service';
 import { CURRENT_YEAR } from '../config/constants';
 import { Treinamento } from '../types';
 
+const decimalToHHMM = (val: number): string => {
+  const h = Math.floor(val);
+  const m = Math.round((val - h) * 60);
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+};
+
+const hhmmToDecimal = (str: string): number => {
+  const parts = str.split(':');
+  return (parseInt(parts[0]) || 0) + (parseInt(parts[1]) || 0) / 60;
+};
+
+const formatHoras = (val: number): string => {
+  const h = Math.floor(val);
+  const m = Math.round((val - h) * 60);
+  return `${h}h${String(m).padStart(2, '0')}min`;
+};
+
 export default function TreinamentosPage() {
   const { isGestor, parcerias, soloBrokers, selectedId, setSelectedId, getEffectiveBrokerId, getListBrokerId } = useBrokerParceriaSelector();
   const { toast, showToast } = useToast();
@@ -27,7 +44,7 @@ export default function TreinamentosPage() {
 
   const [atividade, setAtividade] = useState('');
   const [local, setLocal] = useState('');
-  const [horas, setHoras] = useState('');
+  const [horas, setHoras] = useState('00:00');
 
   const load = useCallback(() => {
     const brokerId = getListBrokerId();
@@ -39,17 +56,17 @@ export default function TreinamentosPage() {
   useEffect(() => { load(); }, [load]);
 
   const resetForm = () => {
-    setModalOpen(false); setEditingId(null); setAtividade(''); setLocal(''); setHoras('');
+    setModalOpen(false); setEditingId(null); setAtividade(''); setLocal(''); setHoras('00:00');
   };
 
   const handleSave = async () => {
     if (!atividade) { showToast('Preencha a atividade'); return; }
     try {
       if (editingId) {
-        await treinamentosService.update(editingId, { atividade, local, horas: Number(horas) || 0 });
+        await treinamentosService.update(editingId, { atividade, local, horas: hhmmToDecimal(horas) });
         showToast('Participação atualizada');
       } else {
-        const payload: any = { month, year, atividade, local, horas: Number(horas) || 0 };
+        const payload: any = { month, year, atividade, local, horas: hhmmToDecimal(horas) };
         if (isGestor) payload.broker_id = getEffectiveBrokerId();
         await treinamentosService.create(payload);
         showToast('Participação registrada');
@@ -62,7 +79,7 @@ export default function TreinamentosPage() {
     setEditingId(row.id);
     setAtividade(row.atividade);
     setLocal(row.local);
-    setHoras(String(row.horas));
+    setHoras(decimalToHHMM(Number(row.horas)));
     setModalOpen(true);
   };
 
@@ -112,7 +129,7 @@ export default function TreinamentosPage() {
                 <tr key={row.id} className="hover:bg-gray-50">
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{row.atividade}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{row.local}</td>
-                  <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{row.horas}h</td>
+                  <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{formatHoras(Number(row.horas))}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 flex gap-1"><Button variant="icon" size="sm" onClick={() => handleEdit(row)}><Pencil size={18} /></Button><Button variant="icon" size="sm" onClick={() => handleDelete(row.id)}><Trash2 size={18} /></Button></td>
                 </tr>
               ))}
@@ -125,7 +142,7 @@ export default function TreinamentosPage() {
         <FormGroup label="Atividade"><input type="text" value={atividade} onChange={e => setAtividade(e.target.value)} placeholder="Nome da atividade" className={inputClass} /></FormGroup>
         <FormRow>
           <FormGroup label="Local"><input type="text" value={local} onChange={e => setLocal(e.target.value)} placeholder="Local ou online" className={inputClass} /></FormGroup>
-          <FormGroup label="Carga Horária (horas)"><input type="number" value={horas} onChange={e => setHoras(e.target.value)} placeholder="0" step="0.5" className={inputClass} /></FormGroup>
+          <FormGroup label="Carga Horária (HH:MM)"><input type="time" value={horas} onChange={e => setHoras(e.target.value)} className={inputClass} /></FormGroup>
         </FormRow>
         <div className="flex gap-3 justify-end mt-6"><Button variant="outline" onClick={resetForm}>Cancelar</Button><Button onClick={handleSave}>{editingId ? 'Atualizar' : 'Salvar'}</Button></div>
       </Modal>

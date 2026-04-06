@@ -49,7 +49,7 @@ export default function CaptacaoPage() {
   };
 
   const handleSave = async () => {
-    if (!oportunidade) { showToast('Preencha a oportunidade'); return; }
+    if (!oportunidade) { showToast('Preencha o imóvel'); return; }
     try {
       if (editingId) {
         await captacoesService.update(editingId, { oportunidade, exclusivo, origem, vgv: Number(vgv) || 0 });
@@ -109,7 +109,7 @@ export default function CaptacaoPage() {
         {loading ? <div className="text-center py-12 text-gray-400">Carregando...</div> : data.length === 0 ? <EmptyState /> : (
           <table className="w-full border-collapse">
             <thead><tr>
-              <th className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 text-left px-6 py-3.5 bg-gray-50 border-b border-gray-200">Oportunidade</th>
+              <th className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 text-left px-6 py-3.5 bg-gray-50 border-b border-gray-200">Imóvel</th>
               <th className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 text-left px-6 py-3.5 bg-gray-50 border-b border-gray-200">Exclusivo</th>
               <th className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 text-left px-6 py-3.5 bg-gray-50 border-b border-gray-200">Origem</th>
               <th className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 text-left px-6 py-3.5 bg-gray-50 border-b border-gray-200">VGV Bruto</th>
@@ -131,10 +131,10 @@ export default function CaptacaoPage() {
       </DataSection>
 
       <Modal isOpen={modalOpen} onClose={resetForm} title={editingId ? 'Editar Captação' : 'Registrar Captação'}>
-        <FormGroup label="Oportunidade / Imóvel"><input type="text" value={oportunidade} onChange={e => setOportunidade(e.target.value)} placeholder="Nome do imóvel" className={inputClass} /></FormGroup>
+        <FormGroup label="Imóvel"><input type="text" value={oportunidade} onChange={e => setOportunidade(e.target.value)} placeholder="Nome do imóvel" className={inputClass} /></FormGroup>
         <FormRow>
           <FormGroup label="Exclusivo?"><select value={exclusivo} onChange={e => setExclusivo(e.target.value)} className={inputClass}><option>NÃO</option><option>SIM</option></select></FormGroup>
-          <FormGroup label="Origem"><select value={origem} onChange={e => setOrigem(e.target.value)} className={inputClass}>{ORIGENS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></FormGroup>
+          <FormGroup label="Origem"><select value={origem} onChange={e => setOrigem(e.target.value)} className={inputClass}>{ORIGENS.filter(o => o.value !== 'CORRETOR_EXTERNO').map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></FormGroup>
         </FormRow>
         <FormGroup label="VGV Bruto (R$)"><CurrencyInput value={vgv} onChange={setVgv} className={inputClass} /></FormGroup>
         <div className="flex gap-3 justify-end mt-6"><Button variant="outline" onClick={resetForm}>Cancelar</Button><Button onClick={handleSave}>{editingId ? 'Atualizar' : 'Salvar'}</Button></div>

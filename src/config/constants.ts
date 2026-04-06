@@ -11,6 +11,8 @@ export const ORIGENS: { value: string; label: string }[] = [
   { value: 'CORRETOR_EXTERNO', label: 'Corretor Externo' },
   { value: 'CORRETOR_INTERNO', label: 'Corretor Interno' },
   { value: 'PORTAL', label: 'Portal' },
+  { value: 'PLANTAO_HAUT', label: 'Plantão Haut' },
+  { value: 'GRUPO_CORRETORES_WHATSAPP', label: 'Grupo de Corretores (WhatsApp)' },
 ];
 
 export const INVESTIMENTO_TIPOS: { value: string; label: string }[] = [

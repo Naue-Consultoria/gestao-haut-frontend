@@ -9,6 +9,7 @@ import { Toast } from '../components/ui/Toast';
 import { EmptyState } from '../components/ui/EmptyState';
 import { DataSection } from '../components/ui/DataSection';
 import { useBrokerSelector } from '../hooks/useBrokerSelector';
+import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import { planosAcaoService } from '../services/planosAcao.service';
 import { parceriasService } from '../services/parcerias.service';
@@ -22,6 +23,8 @@ const statusColors: Record<PlanoStatus, string> = {
 };
 
 export default function PlanosAcaoPage() {
+  const { user } = useAuth();
+  const isGestor = user?.role === 'gestor';
   const { brokers, selectedBrokerId } = useBrokerSelector();
   const { toast, showToast } = useToast();
   const [month, setMonth] = useState(0);
@@ -42,21 +45,36 @@ export default function PlanosAcaoPage() {
     parceriasService.getActive().then(setParcerias).catch(console.error);
   }, []);
 
+  // For corretor: filter parcerias to only those they belong to
+  const visibleParcerias = isGestor
+    ? parcerias
+    : parcerias.filter(p => (p.parceria_membros || []).some(m => m.broker_id === user?.id));
+
   useEffect(() => {
     if (selectedId) return;
-    if (parcerias.length > 0) {
-      setSelectedId(parcerias[0].id);
-    } else if (selectedBrokerId) {
-      setSelectedId(selectedBrokerId);
+    if (isGestor) {
+      if (parcerias.length > 0) {
+        setSelectedId(parcerias[0].id);
+      } else if (selectedBrokerId) {
+        setSelectedId(selectedBrokerId);
+      }
+    } else {
+      if (visibleParcerias.length > 0) {
+        setSelectedId(visibleParcerias[0].id);
+      } else if (user?.id) {
+        setSelectedId(user.id);
+      }
     }
-  }, [parcerias, selectedBrokerId]);
+  }, [parcerias, selectedBrokerId, isGestor, visibleParcerias, user]);
 
   const brokersInParcerias = new Set(
     parcerias.flatMap(p => (p.parceria_membros || []).map(m => m.broker_id))
   );
-  const soloBrokers = brokers.filter(b => !brokersInParcerias.has(b.id));
+  const soloBrokers = isGestor
+    ? brokers.filter(b => !brokersInParcerias.has(b.id))
+    : brokers.filter(b => b.id === user?.id && !brokersInParcerias.has(b.id));
 
-  const isParceriaSelected = parcerias.some(p => p.id === selectedId);
+  const isParceriaSelected = visibleParcerias.some(p => p.id === selectedId);
 
   const load = useCallback(() => {
     if (!selectedId) return;
@@ -134,27 +152,35 @@ export default function PlanosAcaoPage() {
 
   return (
     <div>
-      <PageHeader title="Plano de Acao" description="Defina acoes e prazos para corretores e parcerias" action={<Button icon={<Plus size={16} />} onClick={() => { resetForm(); setModalOpen(true); }}>Nova Acao</Button>} />
+      <PageHeader
+        title="Plano de Acao"
+        description={isGestor ? "Defina acoes e prazos para corretores e parcerias" : "Acompanhe suas ações e prazos"}
+        action={isGestor ? <Button icon={<Plus size={16} />} onClick={() => { resetForm(); setModalOpen(true); }}>Nova Acao</Button> : undefined}
+      />
 
       <div className="flex items-center gap-4 mb-6 flex-wrap">
-        <select
-          value={selectedId}
-          onChange={e => setSelectedId(e.target.value)}
-          className="px-4 py-2.5 bg-white border border-gray-200 rounded-sm font-main text-sm outline-none cursor-pointer min-w-[200px]"
-        >
-          {parcerias.length > 0 && (
-            <optgroup label="Parcerias">
-              {parcerias.map(p => (
-                <option key={p.id} value={p.id}>{p.nome}</option>
-              ))}
-            </optgroup>
-          )}
-          <optgroup label="Corretores">
-            {soloBrokers.map(b => (
-              <option key={b.id} value={b.id}>{b.name} — {b.team}</option>
-            ))}
-          </optgroup>
-        </select>
+        {(isGestor || visibleParcerias.length + soloBrokers.length > 1) && (
+          <select
+            value={selectedId}
+            onChange={e => setSelectedId(e.target.value)}
+            className="px-4 py-2.5 bg-white border border-gray-200 rounded-sm font-main text-sm outline-none cursor-pointer min-w-[200px]"
+          >
+            {visibleParcerias.length > 0 && (
+              <optgroup label="Parcerias">
+                {visibleParcerias.map(p => (
+                  <option key={p.id} value={p.id}>{p.nome}</option>
+                ))}
+              </optgroup>
+            )}
+            {soloBrokers.length > 0 && (
+              <optgroup label={isGestor ? "Corretores" : "Individual"}>
+                {soloBrokers.map(b => (
+                  <option key={b.id} value={b.id}>{b.name} — {b.team}</option>
+                ))}
+              </optgroup>
+            )}
+          </select>
+        )}
         <select value={month} onChange={e => setMonth(Number(e.target.value))} className="px-4 py-2.5 bg-white border border-gray-200 rounded-sm font-main text-sm outline-none cursor-pointer">
           {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
         </select>
@@ -178,7 +204,7 @@ export default function PlanosAcaoPage() {
                 <th className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 text-left px-6 py-3.5 bg-gray-50 border-b border-gray-200">Acao</th>
                 <th className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 text-left px-6 py-3.5 bg-gray-50 border-b border-gray-200 w-36">Prazo</th>
                 <th className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 text-left px-6 py-3.5 bg-gray-50 border-b border-gray-200 w-44">Status</th>
-                <th className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 text-left px-6 py-3.5 bg-gray-50 border-b border-gray-200 w-20">Acoes</th>
+                {isGestor && <th className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 text-left px-6 py-3.5 bg-gray-50 border-b border-gray-200 w-20">Acoes</th>}
               </tr>
             </thead>
             <tbody>
@@ -188,20 +214,28 @@ export default function PlanosAcaoPage() {
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{p.texto}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{p.prazo ? new Date(p.prazo + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100">
-                    <select
-                      value={p.status}
-                      onChange={e => handleStatusChange(p.id, e.target.value)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border-0 outline-none cursor-pointer ${statusColors[p.status]}`}
-                    >
-                      {PLANO_STATUS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                    </select>
+                    {isGestor ? (
+                      <select
+                        value={p.status}
+                        onChange={e => handleStatusChange(p.id, e.target.value)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border-0 outline-none cursor-pointer ${statusColors[p.status]}`}
+                      >
+                        {PLANO_STATUS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                      </select>
+                    ) : (
+                      <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${statusColors[p.status]}`}>
+                        {PLANO_STATUS.find(s => s.value === p.status)?.label || p.status}
+                      </span>
+                    )}
                   </td>
-                  <td className="px-6 py-3.5 text-sm border-b border-gray-100">
-                    <div className="flex gap-1">
-                      <button onClick={() => handleEdit(p)} className="p-2 text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"><Pencil size={18} /></button>
-                      <button onClick={() => handleDelete(p.id)} className="p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"><Trash2 size={18} /></button>
-                    </div>
-                  </td>
+                  {isGestor && (
+                    <td className="px-6 py-3.5 text-sm border-b border-gray-100">
+                      <div className="flex gap-1">
+                        <button onClick={() => handleEdit(p)} className="p-2 text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"><Pencil size={18} /></button>
+                        <button onClick={() => handleDelete(p.id)} className="p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"><Trash2 size={18} /></button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -209,25 +243,27 @@ export default function PlanosAcaoPage() {
         )}
       </DataSection>
 
-      <Modal isOpen={modalOpen} onClose={resetForm} title={editingId ? 'Editar Acao' : 'Nova Acao'}>
-        <FormGroup label="Descricao da Acao">
-          <textarea value={texto} onChange={e => setTexto(e.target.value)} placeholder="Descreva a acao a ser realizada..." className={`${inputClass} min-h-[100px] resize-y`} />
-        </FormGroup>
-        <FormRow>
-          <FormGroup label="Prazo">
-            <input type="date" value={prazo} onChange={e => setPrazo(e.target.value)} className={inputClass} />
+      {isGestor && (
+        <Modal isOpen={modalOpen} onClose={resetForm} title={editingId ? 'Editar Acao' : 'Nova Acao'}>
+          <FormGroup label="Descricao da Acao">
+            <textarea value={texto} onChange={e => setTexto(e.target.value)} placeholder="Descreva a acao a ser realizada..." className={`${inputClass} min-h-[100px] resize-y`} />
           </FormGroup>
-          <FormGroup label="Status">
-            <select value={status} onChange={e => setStatus(e.target.value)} className={inputClass}>
-              {PLANO_STATUS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-            </select>
-          </FormGroup>
-        </FormRow>
-        <div className="flex gap-3 justify-end mt-6">
-          <Button variant="outline" onClick={resetForm}>Cancelar</Button>
-          <Button onClick={handleCreate}>{editingId ? 'Atualizar' : 'Salvar'}</Button>
-        </div>
-      </Modal>
+          <FormRow>
+            <FormGroup label="Prazo">
+              <input type="date" value={prazo} onChange={e => setPrazo(e.target.value)} className={inputClass} />
+            </FormGroup>
+            <FormGroup label="Status">
+              <select value={status} onChange={e => setStatus(e.target.value)} className={inputClass}>
+                {PLANO_STATUS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            </FormGroup>
+          </FormRow>
+          <div className="flex gap-3 justify-end mt-6">
+            <Button variant="outline" onClick={resetForm}>Cancelar</Button>
+            <Button onClick={handleCreate}>{editingId ? 'Atualizar' : 'Salvar'}</Button>
+          </div>
+        </Modal>
+      )}
 
       <Toast message={toast.message} isVisible={toast.visible} />
     </div>
