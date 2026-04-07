@@ -101,10 +101,7 @@ export default function MetasPage() {
     setLoading(true);
     try {
       const vgvAnualNum = Number(vgvAnual) || 0;
-      const vgvMensalNum = Number(vgvMensal) || 0;
       const metaData = {
-        vgv_anual: vgvAnualNum,
-        vgv_mensal: vgvMensalNum,
         captacoes: Number(captacoes) || 0,
         capt_exclusivas: Number(captExclusivas) || 0,
         negocios: Number(negocios) || 0,
@@ -114,10 +111,10 @@ export default function MetasPage() {
       };
 
       if (isParceriaSelected) {
-        await parceriasService.bulkUpsertVgv(selectedId, year, vgvAnualNum, vgvMensalNum);
+        await parceriasService.bulkUpsertVgv(selectedId, year, vgvAnualNum);
         await parceriasService.upsertMeta(selectedId, month, year, metaData);
       } else {
-        await metasService.bulkUpsertVgv(selectedId, year, vgvAnualNum, vgvMensalNum);
+        await metasService.bulkUpsertVgv(selectedId, year, vgvAnualNum);
         await metasService.upsert(selectedId, month, year, metaData);
       }
 

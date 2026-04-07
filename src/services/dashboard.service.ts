@@ -14,12 +14,16 @@ export const dashboardService = {
     const res = await api.get('/dashboard/consolidated/evolution', { params: { year } });
     return res.data.data;
   },
-  yearlyEvolution: async (brokerId: string, year: number): Promise<{ month: number; meta: number; realizado: number }[]> => {
+  yearlyEvolution: async (brokerId: string, year: number): Promise<{ month: number; meta: number; realizado: number; metaAcumulada: number }[]> => {
     const res = await api.get(`/dashboard/individual/${brokerId}/evolution`, { params: { year } });
     return res.data.data;
   },
   individualYearly: async (brokerId: string, year: number): Promise<DashboardIndividualYearly> => {
     const res = await api.get(`/dashboard/individual/${brokerId}/yearly`, { params: { year } });
+    return res.data.data;
+  },
+  consolidatedYearly: async (year: number): Promise<DashboardConsolidated> => {
+    const res = await api.get('/dashboard/consolidated/yearly', { params: { year } });
     return res.data.data;
   },
   ranking: async (month: number, year: number): Promise<RankingItem[]> => {

@@ -45,8 +45,8 @@ export const parceriasService = {
   },
   upsertMeta: (parceriaId: string, month: number, year: number, data: Partial<MetaParceria>) =>
     api.put(`/parcerias/${parceriaId}/metas/${month}`, data, { params: { year } }),
-  bulkUpsertVgv: (parceriaId: string, year: number, vgv_anual: number, vgv_mensal: number) =>
-    api.put(`/parcerias/${parceriaId}/metas/bulk-vgv`, { vgv_anual, vgv_mensal }, { params: { year } }),
+  bulkUpsertVgv: (parceriaId: string, year: number, vgv_anual: number) =>
+    api.put(`/parcerias/${parceriaId}/metas/bulk-vgv`, { vgv_anual }, { params: { year } }),
 
   // Comentários
   getComentarios: async (parceriaId: string): Promise<Comentario[]> => {

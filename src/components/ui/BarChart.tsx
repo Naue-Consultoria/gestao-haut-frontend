@@ -10,9 +10,10 @@ interface BarChartProps {
   data: BarChartData[];
   title?: string;
   highlightIndex?: number;
+  metaLabel?: string;
 }
 
-export function BarChart({ data, title, highlightIndex }: BarChartProps) {
+export function BarChart({ data, title, highlightIndex, metaLabel = 'Meta' }: BarChartProps) {
   const maxVal = Math.max(1, ...data.flatMap(d => [d.meta, d.realizado]));
   const hasHighlight = highlightIndex !== undefined && highlightIndex >= 0;
 
@@ -41,7 +42,7 @@ export function BarChart({ data, title, highlightIndex }: BarChartProps) {
       </div>
       <div className="flex gap-6 mt-4 justify-center">
         <div className="flex items-center gap-1.5 text-xs text-gray-600">
-          <div className="w-2.5 h-2.5 rounded-[2px] bg-gray-200" /> Meta
+          <div className="w-2.5 h-2.5 rounded-[2px] bg-gray-200" /> {metaLabel}
         </div>
         <div className="flex items-center gap-1.5 text-xs text-gray-600">
           <div className="w-2.5 h-2.5 rounded-[2px] bg-accent" /> Realizado

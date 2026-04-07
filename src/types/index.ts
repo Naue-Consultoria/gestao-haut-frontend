@@ -167,6 +167,7 @@ export interface DashboardIndividual {
   parceriaId?: string;
   vgvRealizado: number;
   metaVGVMensal: number;
+  metaVGVMensalAcumulada: number;
   captacoes: number;
   metaCaptacoes: number;
   captExclusivas: number;

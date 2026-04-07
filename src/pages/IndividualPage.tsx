@@ -22,7 +22,7 @@ export default function IndividualPage() {
   const [month, setMonth] = useState(0);
   const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<DashboardIndividual | null>(null);
-  const [evolution, setEvolution] = useState<{ month: number; meta: number; realizado: number }[]>([]);
+  const [evolution, setEvolution] = useState<{ month: number; meta: number; realizado: number; metaAcumulada: number }[]>([]);
   const [yearly, setYearly] = useState<DashboardIndividualYearly | null>(null);
   const [loading, setLoading] = useState(true);
   const [yearlyLoading, setYearlyLoading] = useState(false);
@@ -79,7 +79,7 @@ export default function IndividualPage() {
   }, [selectedBrokerId, month, year, parcerias]);
 
   const chartData = evolution.length > 0
-    ? evolution.map(e => ({ meta: e.meta, realizado: e.realizado }))
+    ? evolution.map(e => ({ meta: e.metaAcumulada ?? e.meta, realizado: e.realizado }))
     : Array.from({ length: 12 }, () => ({ meta: 0, realizado: 0 }));
 
   // Build select options: brokers that are NOT in a partnership + parcerias
@@ -134,7 +134,7 @@ export default function IndividualPage() {
               <StatCard label="Comissão Total" value={fmt(yearly.comissaoTotal)} />
             </StatsGrid>
 
-            <BarChart data={chartData} title="Evolução Mensal — Meta × Realizado" />
+            <BarChart data={chartData} title="Evolução Mensal — Meta Acumulada × Realizado" metaLabel="Meta Acum." />
 
             <DataSection title={`Efetividade — Consolidado ${year}`}>
               <div className="p-6 space-y-4">
@@ -168,15 +168,17 @@ export default function IndividualPage() {
             <StatCard
               label={`VGV Realizado — ${MONTHS[month]}`}
               value={fmt(data.vgvRealizado)}
-              change={`Meta: ${fmt(data.metaVGVMensal)}`}
-              changeType={data.vgvRealizado >= data.metaVGVMensal ? 'positive' : 'negative'}
-            />
+              change={`Meta Acum.: ${fmt(data.metaVGVMensalAcumulada)}`}
+              changeType={data.vgvRealizado >= data.metaVGVMensalAcumulada ? 'positive' : 'negative'}
+            >
+              <div className="text-xs mt-1 font-mono text-gray-500">Meta Mensal: {fmt(data.metaVGVMensal)}</div>
+            </StatCard>
             <StatCard label="Captações" value={String(data.captacoes)} change={`Meta: ${data.metaCaptacoes}`} changeType={data.captacoes >= data.metaCaptacoes ? 'positive' : 'negative'} />
             <StatCard label="Horas Treinamento" value={`${data.treinamentoHoras}h`} change={`Meta: ${data.metaTreinamento}h`} changeType={data.treinamentoHoras >= data.metaTreinamento ? 'positive' : 'negative'} />
             <StatCard label="Investimentos" value={fmt(data.investimentoValor)} change={`Meta: ${fmt(data.metaInvestimento)}`} changeType={data.investimentoValor >= data.metaInvestimento ? 'positive' : 'negative'} />
           </StatsGrid>
 
-          <BarChart data={chartData} title="Evolução Mensal — Meta × Realizado" highlightIndex={month} />
+          <BarChart data={chartData} title="Evolução Mensal — Meta Acumulada × Realizado" highlightIndex={month} metaLabel="Meta Acum." />
 
           <DataSection title="Efetividade">
             <div className="p-6 space-y-4">
