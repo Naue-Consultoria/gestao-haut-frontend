@@ -25,7 +25,6 @@ export default function MetasPage() {
   const [vgvAnual, setVgvAnual] = useState('');
   const [captacoes, setCaptacoes] = useState('');
   const [captExclusivas, setCaptExclusivas] = useState('');
-  const [negocios, setNegocios] = useState('');
   const [treinamento, setTreinamento] = useState('');
   const [investimento, setInvestimento] = useState('');
   const [positivacao, setPositivacao] = useState('');
@@ -59,7 +58,6 @@ export default function MetasPage() {
     setVgvAnual('');
     setCaptacoes('');
     setCaptExclusivas('');
-    setNegocios('');
     setTreinamento('');
     setInvestimento('');
     setPositivacao('');
@@ -78,7 +76,6 @@ export default function MetasPage() {
         setVgvAnual(meta.vgv_anual ? String(meta.vgv_anual) : '');
         setCaptacoes(meta.captacoes ? String(meta.captacoes) : '');
         setCaptExclusivas(meta.capt_exclusivas ? String(meta.capt_exclusivas) : '');
-        setNegocios(meta.negocios ? String(meta.negocios) : '');
         setTreinamento(meta.treinamento ? String(meta.treinamento) : '');
         setInvestimento(meta.investimento ? String(meta.investimento) : '');
         setPositivacao(meta.positivacao ? String(meta.positivacao) : '');
@@ -104,7 +101,6 @@ export default function MetasPage() {
       const metaData = {
         captacoes: Number(captacoes) || 0,
         capt_exclusivas: Number(captExclusivas) || 0,
-        negocios: Number(negocios) || 0,
         treinamento: Number(treinamento) || 0,
         investimento: Number(investimento) || 0,
         positivacao: Number(positivacao) || 0,
@@ -204,9 +200,6 @@ export default function MetasPage() {
           </FormGroup>
           <FormGroup label="Meta Captações Exclusivas">
             <input type="number" value={captExclusivas} onChange={e => setCaptExclusivas(e.target.value)} placeholder="0" className={inputClass} />
-          </FormGroup>
-          <FormGroup label="Meta Negócios Levantados (R$)">
-            <CurrencyInput value={negocios} onChange={setNegocios} className={inputClass} />
           </FormGroup>
           <FormGroup label="Meta Horas Treinamento">
             <input type="number" value={treinamento} onChange={e => setTreinamento(e.target.value)} placeholder="0" className={inputClass} />
