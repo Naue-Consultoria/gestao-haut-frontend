@@ -35,21 +35,25 @@ export default function MetasPage() {
     parceriasService.getActive().then(setParcerias).catch(console.error);
   }, []);
 
-  // Sync selectedId with first available option
-  useEffect(() => {
-    if (selectedId) return;
-    if (parcerias.length > 0) {
-      setSelectedId(parcerias[0].id);
-    } else if (selectedBrokerId) {
-      setSelectedId(selectedBrokerId);
-    }
-  }, [parcerias, selectedBrokerId]);
-
   // Brokers in partnerships (excluded from solo list)
   const brokersInParcerias = new Set(
     parcerias.flatMap(p => (p.parceria_membros || []).map(m => m.broker_id))
   );
   const soloBrokers = brokers.filter(b => !brokersInParcerias.has(b.id));
+
+  // Sync selectedId with first available option
+  useEffect(() => {
+    if (selectedId) {
+      const isValidParceria = parcerias.some(p => p.id === selectedId);
+      const isValidBroker = brokers.some(b => b.id === selectedId && !brokersInParcerias.has(b.id));
+      if (isValidParceria || isValidBroker) return;
+    }
+    if (parcerias.length > 0) {
+      setSelectedId(parcerias[0].id);
+    } else if (selectedBrokerId) {
+      setSelectedId(selectedBrokerId);
+    }
+  }, [parcerias, selectedBrokerId, brokers]);
 
   // Determine if selected is a parceria or a broker
   const isParceriaSelected = parcerias.some(p => p.id === selectedId);
