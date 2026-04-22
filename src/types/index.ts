@@ -223,3 +223,11 @@ export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
 }
+
+export interface RoiEntry {
+  brokerId: string;
+  brokerName: string;
+  receita: number;
+  investimento: number;
+  roi: number | null; // decimal ratio — 2.5 means 250%. null means zero investimento in period
+}
