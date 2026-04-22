@@ -10,8 +10,9 @@ import { Indicator } from '../components/ui/Indicator';
 import { dashboardService } from '../services/dashboard.service';
 import { MONTHS, CURRENT_YEAR } from '../config/constants';
 import { fmt, fmtPct } from '../utils/formatters';
-import { DashboardConsolidated } from '../types';
+import { DashboardConsolidated, RoiEntry } from '../types';
 import { Users } from 'lucide-react';
+import { RoiTable } from '../components/ranking/RoiTable';
 
 export default function DashboardPage() {
   const [month, setMonth] = useState(0);
@@ -21,6 +22,13 @@ export default function DashboardPage() {
   const [evolution, setEvolution] = useState<{ month: number; meta: number; realizado: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [yearlyLoading, setYearlyLoading] = useState(false);
+
+  // ROI Phase 2 — covers ROI-01, ROI-02, ROI-07. Initial loading = false because
+  // cards only fetch when the relevant tab is active (mirrors consolidated/yearly pattern).
+  const [roi, setRoi] = useState<RoiEntry[]>([]);
+  const [roiYearly, setRoiYearly] = useState<RoiEntry[]>([]);
+  const [roiLoading, setRoiLoading] = useState(false);
+  const [roiYearlyLoading, setRoiYearlyLoading] = useState(false);
 
   // Evolution only depends on year (cached across month changes)
   useEffect(() => {
@@ -40,6 +48,16 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, [month, year]);
 
+  // Monthly ROI — fetches only when a specific month is selected
+  useEffect(() => {
+    if (month === -1) return;
+    setRoiLoading(true);
+    dashboardService.roi(month, year)
+      .then(setRoi)
+      .catch(console.error)
+      .finally(() => setRoiLoading(false));
+  }, [month, year]);
+
   // Yearly consolidated (only when "Anual" tab is active)
   useEffect(() => {
     if (month !== -1) return;
@@ -49,6 +67,17 @@ export default function DashboardPage() {
       .then(setYearly)
       .catch(console.error)
       .finally(() => setYearlyLoading(false));
+  }, [month, year]);
+
+  // Yearly ROI — fetches only when "Anual" tab is active
+  useEffect(() => {
+    if (month !== -1) return;
+    setRoiYearlyLoading(true);
+    setRoiYearly([]);
+    dashboardService.roiYearly(year)
+      .then(setRoiYearly)
+      .catch(console.error)
+      .finally(() => setRoiYearlyLoading(false));
   }, [month, year]);
 
   const chartData = evolution.length > 0
@@ -104,6 +133,13 @@ export default function DashboardPage() {
             <BarChart data={chartData} title="Meta × Realizado Mensal" />
 
             {renderBrokerTable(yearly.brokers)}
+
+            <RoiTable
+              title="ROI Anual"
+              period={String(year)}
+              data={roiYearly}
+              loading={roiYearlyLoading}
+            />
           </>
         ) : (
           <div className="text-center py-16 text-gray-400">Nenhum dado encontrado</div>
@@ -122,6 +158,13 @@ export default function DashboardPage() {
           <BarChart data={chartData} title="Meta × Realizado Mensal" highlightIndex={month} />
 
           {renderBrokerTable(data.brokers)}
+
+          <RoiTable
+            title="ROI Mensal"
+            period={`${MONTHS[month]} ${year}`}
+            data={roi}
+            loading={roiLoading}
+          />
         </>
       )}
     </div>
