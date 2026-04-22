@@ -41,10 +41,10 @@ export function buildReportHtml(data: ReportData, month: number, year: number): 
 
   // KPI calculations
   const pctAnual = meta.vgv_anual > 0 ? (t.vgvAcumuladoAno / meta.vgv_anual * 100) : 0;
-  const pctMensal = meta.vgv_mensal > 0 ? (t.vgvRealizado / meta.vgv_mensal * 100) : 0;
   const metaAteMes = data.monthlyMeta.slice(0, month + 1).reduce((acc, v) => acc + (v || 0), 0);
   const realizadoMesesPrevios = data.monthlyVgv.slice(0, month).reduce((acc, v) => acc + (v || 0), 0);
   const metaAcumulada = Math.max(0, metaAteMes - realizadoMesesPrevios);
+  const pctMensal = metaAcumulada > 0 ? (t.vgvRealizado / metaAcumulada * 100) : 0;
   const resultadoMensal = t.vgvRealizado - metaAcumulada;
   const taxaExclusividade = t.captacoesCount > 0 ? (t.captExclusivas / t.captacoesCount * 100) : 0;
 
@@ -298,7 +298,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: #f0f0f3; col
       <div class="kpi-card cyan">
         <div class="kpi-label">Realizado ${MONTHS_SHORT[month]}</div>
         <div class="kpi-value">${fmtCompact(t.vgvRealizado)}</div>
-        <div class="kpi-sub">Meta mês: ${fmtCompact(meta.vgv_mensal)}</div>
+        <div class="kpi-sub">Meta acum.: ${fmtCompact(metaAcumulada)}</div>
       </div>
       <div class="kpi-card violet">
         <div class="kpi-label">Negócios Gerados</div>
