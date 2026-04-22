@@ -9,7 +9,7 @@ import { RankingItem } from '../components/ranking/RankingItem';
 import { dashboardService } from '../services/dashboard.service';
 import { CURRENT_YEAR } from '../config/constants';
 import { fmt } from '../utils/formatters';
-import { RankingItem as RankingItemType } from '../types';
+import { RankingItem as RankingItemType, RoiEntry } from '../types';
 import { Users } from 'lucide-react';
 
 export default function RankingPage() {
@@ -17,6 +17,7 @@ export default function RankingPage() {
   const [year, setYear] = useState(CURRENT_YEAR);
   const [data, setData] = useState<RankingItemType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [roi, setRoi] = useState<RoiEntry[]>([]);
 
   useEffect(() => {
     setLoading(true);
@@ -25,6 +26,17 @@ export default function RankingPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [month, year]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setRoi([]);
+    dashboardService.roi(month, year, controller.signal)
+      .then((result) => { if (!controller.signal.aborted) setRoi(result); })
+      .catch((err) => { if (err.name !== 'CanceledError' && err.name !== 'AbortError') console.error(err); });
+    return () => controller.abort();
+  }, [month, year]);
+
+  const roiByBroker = new Map(roi.map((r) => [r.brokerId, r.roi]));
 
   const totalVGV = data.reduce((s, r) => s + r.vgvRealizado, 0);
   const totalCaptacoes = data.reduce((s, r) => s + r.captacoes, 0);
@@ -70,6 +82,7 @@ export default function RankingPage() {
                 <th className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 text-left px-6 py-3.5 bg-gray-50 border-b border-gray-200">Treinamentos (h)</th>
                 <th className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 text-left px-6 py-3.5 bg-gray-50 border-b border-gray-200">Investimento</th>
                 <th className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 text-left px-6 py-3.5 bg-gray-50 border-b border-gray-200">Positivação</th>
+                <th className="text-[10px] font-semibold tracking-widest uppercase text-gray-500 text-right px-6 py-3.5 bg-gray-50 border-b border-gray-200">ROI</th>
               </tr></thead>
               <tbody>
                 {data.map(r => (
@@ -87,6 +100,24 @@ export default function RankingPage() {
                     <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{r.treinamentoHoras}h</td>
                     <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{fmt(r.investimento)}</td>
                     <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{r.positivacoes}</td>
+                    <td className="px-6 py-3.5 text-sm border-b border-gray-100 font-mono text-right">
+                      {(() => {
+                        const v = roiByBroker.get(r.brokerId);
+                        if (v === undefined || v === null) {
+                          return (
+                            <span
+                              title="sem investimento no período"
+                              aria-label="sem investimento no período"
+                              className="text-gray-400 cursor-help"
+                            >
+                              —
+                            </span>
+                          );
+                        }
+                        const cls = v > 0 ? 'text-positive font-semibold' : v < 0 ? 'text-negative font-semibold' : 'text-gray-700';
+                        return <span className={cls}>{(v * 100).toFixed(2)}%</span>;
+                      })()}
+                    </td>
                   </tr>
                 ))}
               </tbody>
