@@ -9,7 +9,8 @@ interface RoiTableProps {
   loading: boolean;
 }
 
-// ROI display: backend returns decimal ratio (2.5 = 250%). Multiply by 100 + 2 decimal places + %.
+// ROI display: backend returns decimal ratio (2.5 = 250%, -0.5 = -50%). Multiply by 100 + 2 decimal places + %.
+// Negative values preserve the minus sign via JS number formatting. null means zero investimento in period — rendered as "—" at call site.
 function formatRoiPct(roi: number): string {
   return (roi * 100).toFixed(2) + '%';
 }
