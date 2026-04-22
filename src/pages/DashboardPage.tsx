@@ -140,14 +140,14 @@ export default function DashboardPage() {
               <StatCard label="Captações" value={String(yearly.totalCaptacoes)} />
             </StatsGrid>
 
+            <BarChart data={chartData} title="Meta × Realizado Mensal" />
+
             <RoiTable
               title="ROI Anual"
               period={String(year)}
               data={roiYearly}
               loading={roiYearlyLoading}
             />
-
-            <BarChart data={chartData} title="Meta × Realizado Mensal" />
 
             {renderBrokerTable(yearly.brokers)}
           </>
@@ -165,14 +165,14 @@ export default function DashboardPage() {
             <StatCard label={`Captações em ${MONTHS[month]}`} value={String(data.totalCaptacoes)} />
           </StatsGrid>
 
+          <BarChart data={chartData} title="Meta × Realizado Mensal" highlightIndex={month} />
+
           <RoiTable
             title="ROI Mensal"
             period={`${MONTHS[month]} ${year}`}
             data={roi}
             loading={roiLoading}
           />
-
-          <BarChart data={chartData} title="Meta × Realizado Mensal" highlightIndex={month} />
 
           {renderBrokerTable(data.brokers)}
         </>
