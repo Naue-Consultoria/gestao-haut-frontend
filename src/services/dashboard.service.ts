@@ -1,5 +1,5 @@
 import api from '../config/api';
-import { DashboardConsolidated, DashboardIndividual, DashboardIndividualYearly, RankingItem } from '../types';
+import { DashboardConsolidated, DashboardIndividual, DashboardIndividualYearly, RankingItem, RoiEntry } from '../types';
 
 export const dashboardService = {
   consolidated: async (month: number, year: number): Promise<DashboardConsolidated> => {
@@ -28,6 +28,14 @@ export const dashboardService = {
   },
   ranking: async (month: number, year: number): Promise<RankingItem[]> => {
     const res = await api.get('/dashboard/ranking', { params: { month, year } });
+    return res.data.data;
+  },
+  roi: async (month: number, year: number): Promise<RoiEntry[]> => {
+    const res = await api.get('/dashboard/roi', { params: { month, year } });
+    return res.data.data;
+  },
+  roiYearly: async (year: number): Promise<RoiEntry[]> => {
+    const res = await api.get('/dashboard/roi/yearly', { params: { year } });
     return res.data.data;
   },
 };
