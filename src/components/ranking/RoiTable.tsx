@@ -29,7 +29,9 @@ export function RoiTable({ title, period, data, loading }: RoiTableProps) {
     );
   }
 
-  if (data.length === 0) {
+  const safeData = data ?? [];
+
+  if (safeData.length === 0) {
     return (
       <DataSection title={title} badge={period}>
         <div className="text-center py-10 text-sm text-gray-400">
@@ -77,7 +79,7 @@ export function RoiTable({ title, period, data, loading }: RoiTableProps) {
             </tr>
           </thead>
           <tbody>
-            {data.map((entry, idx) => {
+            {safeData.map((entry, idx) => {
               const rank = idx + 1;
               const rankClass =
                 rank === 1
