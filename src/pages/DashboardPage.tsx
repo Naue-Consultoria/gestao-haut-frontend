@@ -29,6 +29,7 @@ export default function DashboardPage() {
   const [roiYearly, setRoiYearly] = useState<RoiEntry[]>([]);
   const [roiLoading, setRoiLoading] = useState(false);
   const [roiYearlyLoading, setRoiYearlyLoading] = useState(false);
+  const [tableTab, setTableTab] = useState<'brokers' | 'roi'>('brokers');
 
   // Evolution only depends on year (cached across month changes)
   useEffect(() => {
@@ -142,14 +143,33 @@ export default function DashboardPage() {
 
             <BarChart data={chartData} title="Meta × Realizado Mensal" />
 
-            <RoiTable
-              title="ROI Anual"
-              period={String(year)}
-              data={roiYearly}
-              loading={roiYearlyLoading}
-            />
+            <div className="flex gap-1 border-b border-gray-200 mb-4">
+              <button
+                type="button"
+                onClick={() => setTableTab('brokers')}
+                className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${tableTab === 'brokers' ? 'border-accent text-accent' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+              >
+                Resumo por Corretor
+              </button>
+              <button
+                type="button"
+                onClick={() => setTableTab('roi')}
+                className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${tableTab === 'roi' ? 'border-accent text-accent' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+              >
+                ROI
+              </button>
+            </div>
 
-            {renderBrokerTable(yearly.brokers)}
+            {tableTab === 'brokers' ? (
+              renderBrokerTable(yearly.brokers)
+            ) : (
+              <RoiTable
+                title="ROI Anual"
+                period={String(year)}
+                data={roiYearly}
+                loading={roiYearlyLoading}
+              />
+            )}
           </>
         ) : (
           <div className="text-center py-16 text-gray-400">Nenhum dado encontrado</div>
@@ -167,14 +187,33 @@ export default function DashboardPage() {
 
           <BarChart data={chartData} title="Meta × Realizado Mensal" highlightIndex={month} />
 
-          <RoiTable
-            title="ROI Mensal"
-            period={`${MONTHS[month]} ${year}`}
-            data={roi}
-            loading={roiLoading}
-          />
+          <div className="flex gap-1 border-b border-gray-200 mb-4">
+            <button
+              type="button"
+              onClick={() => setTableTab('brokers')}
+              className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${tableTab === 'brokers' ? 'border-accent text-accent' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              Resumo por Corretor
+            </button>
+            <button
+              type="button"
+              onClick={() => setTableTab('roi')}
+              className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${tableTab === 'roi' ? 'border-accent text-accent' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              ROI
+            </button>
+          </div>
 
-          {renderBrokerTable(data.brokers)}
+          {tableTab === 'brokers' ? (
+            renderBrokerTable(data.brokers)
+          ) : (
+            <RoiTable
+              title="ROI Mensal"
+              period={`${MONTHS[month]} ${year}`}
+              data={roi}
+              loading={roiLoading}
+            />
+          )}
         </>
       )}
     </div>
