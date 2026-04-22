@@ -84,6 +84,11 @@ export default function DashboardPage() {
     return () => controller.abort();
   }, [month, year]);
 
+  // MD-02: clear stale yearly ROI when switching back to a monthly tab
+  useEffect(() => {
+    if (month !== -1) setRoiYearly([]);
+  }, [month]);
+
   const chartData = evolution.length > 0
     ? evolution.map(e => ({ meta: e.meta, realizado: e.realizado }))
     : Array.from({ length: 12 }, () => ({ meta: 0, realizado: 0 }));
