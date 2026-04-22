@@ -52,6 +52,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (month === -1) return;
     const controller = new AbortController();
+    setRoi([]);
     setRoiLoading(true);
     dashboardService.roi(month, year, controller.signal)
       .then((result) => { if (!controller.signal.aborted) setRoi(result); })

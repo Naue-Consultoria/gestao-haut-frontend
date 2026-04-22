@@ -46,7 +46,8 @@ export function RoiTable({ title, period, data, loading }: RoiTableProps) {
     <DataSection title={title} badge={period}>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
-          <thead><tr>
+          <thead>
+            <tr>
               <th
                 scope="col"
                 className="w-12 text-[10px] font-semibold tracking-widest uppercase text-gray-500 text-center px-6 py-3.5 bg-gray-50 border-b border-gray-200 whitespace-nowrap"
@@ -111,7 +112,7 @@ export function RoiTable({ title, period, data, loading }: RoiTableProps) {
                         —
                       </span>
                     ) : (
-                      <span className={`font-semibold ${roiColorClass(entry.roi)}`}>
+                      <span className={`${entry.roi === 0 ? '' : 'font-semibold'} ${roiColorClass(entry.roi)}`}>
                         {formatRoiPct(entry.roi)}
                       </span>
                     )}
