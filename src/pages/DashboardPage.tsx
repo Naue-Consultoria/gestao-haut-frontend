@@ -51,11 +51,13 @@ export default function DashboardPage() {
   // Monthly ROI — fetches only when a specific month is selected
   useEffect(() => {
     if (month === -1) return;
+    const controller = new AbortController();
     setRoiLoading(true);
-    dashboardService.roi(month, year)
-      .then(setRoi)
-      .catch(console.error)
-      .finally(() => setRoiLoading(false));
+    dashboardService.roi(month, year, controller.signal)
+      .then((result) => { if (!controller.signal.aborted) setRoi(result); })
+      .catch((err) => { if (err.name !== 'CanceledError' && err.name !== 'AbortError') console.error(err); })
+      .finally(() => { if (!controller.signal.aborted) setRoiLoading(false); });
+    return () => controller.abort();
   }, [month, year]);
 
   // Yearly consolidated (only when "Anual" tab is active)
@@ -72,12 +74,14 @@ export default function DashboardPage() {
   // Yearly ROI — fetches only when "Anual" tab is active
   useEffect(() => {
     if (month !== -1) return;
+    const controller = new AbortController();
     setRoiYearlyLoading(true);
     setRoiYearly([]);
-    dashboardService.roiYearly(year)
-      .then(setRoiYearly)
-      .catch(console.error)
-      .finally(() => setRoiYearlyLoading(false));
+    dashboardService.roiYearly(year, controller.signal)
+      .then((result) => { if (!controller.signal.aborted) setRoiYearly(result); })
+      .catch((err) => { if (err.name !== 'CanceledError' && err.name !== 'AbortError') console.error(err); })
+      .finally(() => { if (!controller.signal.aborted) setRoiYearlyLoading(false); });
+    return () => controller.abort();
   }, [month, year]);
 
   const chartData = evolution.length > 0

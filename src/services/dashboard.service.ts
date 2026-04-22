@@ -30,12 +30,12 @@ export const dashboardService = {
     const res = await api.get('/dashboard/ranking', { params: { month, year } });
     return res.data.data;
   },
-  roi: async (month: number, year: number): Promise<RoiEntry[]> => {
-    const res = await api.get('/dashboard/roi', { params: { month, year } });
+  roi: async (month: number, year: number, signal?: AbortSignal): Promise<RoiEntry[]> => {
+    const res = await api.get('/dashboard/roi', { params: { month, year }, signal });
     return res.data.data;
   },
-  roiYearly: async (year: number): Promise<RoiEntry[]> => {
-    const res = await api.get('/dashboard/roi/yearly', { params: { year } });
+  roiYearly: async (year: number, signal?: AbortSignal): Promise<RoiEntry[]> => {
+    const res = await api.get('/dashboard/roi/yearly', { params: { year }, signal });
     return res.data.data;
   },
 };
