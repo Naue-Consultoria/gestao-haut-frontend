@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Pencil, Trash2, KeyRound, RefreshCw, Camera, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, KeyRound, RefreshCw, Camera, X, Copy, Check, Eye, EyeOff, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { DataSection } from '../components/ui/DataSection';
 import { Modal } from '../components/ui/Modal';
@@ -32,6 +32,10 @@ export default function UsuariosPage() {
 
   const [resetTarget, setResetTarget] = useState<User | null>(null);
   const [resetPassword, setResetPassword] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetDone, setResetDone] = useState(false);
+  const [resetShowPassword, setResetShowPassword] = useState(true);
+  const [resetCopied, setResetCopied] = useState(false);
 
   const [editUser, setEditUser] = useState<User | null>(null);
   const [editName, setEditName] = useState('');
@@ -130,13 +134,58 @@ export default function UsuariosPage() {
     return pwd;
   }, []);
 
+  const openResetModal = (u: User) => {
+    setResetTarget(u);
+    setResetPassword(generatePassword());
+    setResetLoading(false);
+    setResetDone(false);
+    setResetShowPassword(true);
+    setResetCopied(false);
+  };
+
+  const closeResetModal = () => {
+    setResetTarget(null);
+    setResetPassword('');
+    setResetLoading(false);
+    setResetDone(false);
+    setResetShowPassword(true);
+    setResetCopied(false);
+  };
+
+  const copyResetPassword = async () => {
+    if (!resetPassword) return;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(resetPassword);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = resetPassword;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      setResetCopied(true);
+      showToast('Senha copiada para a área de transferência');
+      setTimeout(() => setResetCopied(false), 2000);
+    } catch {
+      showToast('Não foi possível copiar a senha');
+    }
+  };
+
   const handleResetPassword = async () => {
     if (!resetTarget || resetPassword.length < 6) { showToast('Senha deve ter no mínimo 6 caracteres'); return; }
+    setResetLoading(true);
     try {
       await profilesService.resetPassword(resetTarget.id, resetPassword);
-      showToast('Senha resetada com sucesso');
-      setResetTarget(null); setResetPassword('');
-    } catch { showToast('Erro ao resetar senha'); }
+      setResetDone(true);
+    } catch {
+      showToast('Erro ao resetar senha');
+    } finally {
+      setResetLoading(false);
+    }
   };
 
   const inputClass = 'w-full px-4 py-3 bg-gray-50 border border-gray-200 text-black rounded-sm font-main text-sm outline-none transition-all focus:border-gray-400 focus:bg-white';
@@ -180,7 +229,7 @@ export default function UsuariosPage() {
                       <button onClick={() => openEdit(u)} className="p-2 text-gray-400 hover:text-gray-700 transition-colors" title="Editar">
                         <Pencil size={18} />
                       </button>
-                      <button onClick={() => { setResetTarget(u); setResetPassword(generatePassword()); }} className="p-2 text-gray-400 hover:text-amber-500 transition-colors" title="Resetar Senha">
+                      <button onClick={() => openResetModal(u)} className="p-2 text-gray-400 hover:text-amber-500 transition-colors" title="Resetar Senha">
                         <KeyRound size={18} />
                       </button>
                       <button onClick={() => setDeleteTarget(u)} className="p-2 text-gray-400 hover:text-red-500 transition-colors" title="Excluir">
@@ -300,22 +349,113 @@ export default function UsuariosPage() {
       </Modal>
 
       {/* Modal Resetar Senha */}
-      <Modal isOpen={!!resetTarget} onClose={() => setResetTarget(null)} title="Resetar Senha">
-        <p className="text-sm text-gray-600 mb-4">
-          Defina uma nova senha temporária para <strong>{resetTarget?.name}</strong>. O usuário será obrigado a trocar a senha no próximo login.
-        </p>
-        <FormGroup label="Nova Senha">
-          <div className="flex gap-2">
-            <input type="text" value={resetPassword} onChange={e => setResetPassword(e.target.value)} placeholder="Mínimo 6 caracteres" className={inputClass} />
-            <button onClick={() => setResetPassword(generatePassword())} className="px-3 py-2 bg-gray-100 border border-gray-200 rounded-sm text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors shrink-0" title="Gerar senha" type="button">
-              <RefreshCw size={16} />
-            </button>
-          </div>
-        </FormGroup>
-        <div className="flex gap-3 justify-end mt-6">
-          <Button variant="outline" onClick={() => setResetTarget(null)}>Cancelar</Button>
-          <Button onClick={handleResetPassword}>Resetar</Button>
-        </div>
+      <Modal isOpen={!!resetTarget} onClose={closeResetModal} title={resetDone ? 'Senha Redefinida' : 'Resetar Senha'}>
+        {!resetDone ? (
+          <>
+            <div className="flex items-start gap-3 p-4 mb-5 bg-amber-50 border border-amber-200 rounded-sm">
+              <AlertTriangle size={18} className="text-amber-600 mt-0.5 shrink-0" />
+              <p className="text-sm text-amber-900 leading-relaxed">
+                Você está definindo uma nova senha temporária para <strong>{resetTarget?.name}</strong>. O usuário será obrigado a trocá-la no próximo login. Anote ou copie antes de confirmar.
+              </p>
+            </div>
+            <FormGroup label="Nova Senha">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type={resetShowPassword ? 'text' : 'password'}
+                    value={resetPassword}
+                    onChange={e => setResetPassword(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !resetLoading) handleResetPassword(); }}
+                    placeholder="Mínimo 6 caracteres"
+                    autoFocus
+                    className={`${inputClass} pr-10 font-mono tracking-wider`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setResetShowPassword(v => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-700 transition-colors"
+                    title={resetShowPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  >
+                    {resetShowPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={copyResetPassword}
+                  disabled={!resetPassword}
+                  className="px-3 py-2 bg-gray-100 border border-gray-200 rounded-sm text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Copiar senha"
+                >
+                  {resetCopied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setResetPassword(generatePassword())}
+                  className="px-3 py-2 bg-gray-100 border border-gray-200 rounded-sm text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors shrink-0"
+                  title="Gerar nova senha"
+                >
+                  <RefreshCw size={16} />
+                </button>
+              </div>
+              <div className="flex items-center justify-between mt-2 text-xs">
+                <span className={resetPassword.length < 6 ? 'text-red-500' : 'text-gray-400'}>
+                  {resetPassword.length < 6
+                    ? `Faltam ${6 - resetPassword.length} caracteres`
+                    : `${resetPassword.length} caracteres`}
+                </span>
+                <span className="text-gray-400">Pressione Enter para confirmar</span>
+              </div>
+            </FormGroup>
+            <div className="flex gap-3 justify-end mt-6">
+              <Button variant="outline" onClick={closeResetModal} disabled={resetLoading}>Cancelar</Button>
+              <Button onClick={handleResetPassword} disabled={resetLoading || resetPassword.length < 6}>
+                {resetLoading ? 'Resetando...' : 'Resetar Senha'}
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-start gap-3 p-4 mb-5 bg-green-50 border border-green-200 rounded-sm">
+              <ShieldCheck size={18} className="text-green-600 mt-0.5 shrink-0" />
+              <div className="text-sm text-green-900 leading-relaxed">
+                Senha de <strong>{resetTarget?.name}</strong> redefinida com sucesso. Copie e envie para o usuário — esta é a última vez que ela será exibida.
+              </div>
+            </div>
+
+            <div className="mb-5">
+              <label className="block text-[11px] font-semibold tracking-widest uppercase text-gray-500 mb-2">Nova Senha Temporária</label>
+              <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border border-gray-200 rounded-sm">
+                <code className="flex-1 font-mono text-base tracking-[0.2em] text-black select-all break-all">
+                  {resetShowPassword ? resetPassword : '•'.repeat(resetPassword.length)}
+                </code>
+                <button
+                  type="button"
+                  onClick={() => setResetShowPassword(v => !v)}
+                  className="p-1.5 text-gray-400 hover:text-gray-700 transition-colors shrink-0"
+                  title={resetShowPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                >
+                  {resetShowPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+                <button
+                  type="button"
+                  onClick={copyResetPassword}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-medium uppercase tracking-wider transition-colors shrink-0 ${resetCopied ? 'bg-green-100 text-green-700' : 'bg-accent text-white hover:brightness-110'}`}
+                  title="Copiar senha"
+                >
+                  {resetCopied ? <><Check size={14} /> Copiado</> : <><Copy size={14} /> Copiar</>}
+                </button>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-500 mb-6">
+              O usuário será obrigado a definir uma nova senha no próximo login.
+            </p>
+
+            <div className="flex gap-3 justify-end">
+              <Button onClick={() => { closeResetModal(); load(); }}>Concluir</Button>
+            </div>
+          </>
+        )}
       </Modal>
 
       <Toast message={toast.message} isVisible={toast.visible} />
