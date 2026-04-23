@@ -67,6 +67,15 @@ export interface MapaAmbicao {
   updated_at: string;
 }
 
+// Summary for gestor list view (matches backend MapaAmbicaoSummary type)
+export interface MapaAmbicaoSummary {
+  broker_id: string;
+  broker_name: string;
+  status: 'vazio' | 'parcial' | 'preenchido';
+  updated_at: string | null;
+  has_mapa: boolean;
+}
+
 export function emptyTrackingRow(): TrackingRow {
   return { id: crypto.randomUUID(), data: '', patrimonio: 0, notas: '' };
 }
