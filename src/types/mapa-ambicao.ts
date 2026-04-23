@@ -52,6 +52,9 @@ export interface MapaDados {
   actionsShort: ActionRow[];
   actionsMedium: ActionRow[];
   actionsLong: ActionRow[];
+
+  // --- Tab: Dashboard (Phase 5) ---
+  rendaAnual: number;
 }
 
 // Full API record (matches backend MapaAmbicao type)
@@ -84,5 +87,6 @@ export function emptyMapaDados(): MapaDados {
     actionsShort: [emptyActionRow()],
     actionsMedium: [emptyActionRow()],
     actionsLong: [emptyActionRow()],
+    rendaAnual: 0,
   };
 }
