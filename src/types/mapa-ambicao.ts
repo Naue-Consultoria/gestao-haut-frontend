@@ -1,5 +1,6 @@
 // Rastreamento row
 export interface TrackingRow {
+  id: string;            // stable key for React; generated via crypto.randomUUID()
   data: string;          // ISO date string "YYYY-MM-DD"
   patrimonio: number;    // raw numeric value
   notas: string;
@@ -7,6 +8,7 @@ export interface TrackingRow {
 
 // Timeline action row
 export interface ActionRow {
+  id: string;            // stable key for React; generated via crypto.randomUUID()
   descricao: string;
   prazo: string;         // free-text, e.g. "Mar/2027"
   status: '' | 'pendente' | 'andamento' | 'concluido';
@@ -62,17 +64,25 @@ export interface MapaAmbicao {
   updated_at: string;
 }
 
+export function emptyTrackingRow(): TrackingRow {
+  return { id: crypto.randomUUID(), data: '', patrimonio: 0, notas: '' };
+}
+
+export function emptyActionRow(): ActionRow {
+  return { id: crypto.randomUUID(), descricao: '', prazo: '', status: '' };
+}
+
 export function emptyMapaDados(): MapaDados {
   return {
     p1Visao: '', p1Atividades: '', p1Legado: '', p1Causas: '', p1Dia: '',
     expenses: {}, expenseObs: {},
     assets: {}, patObservacoes: '',
-    tracking: [{ data: '', patrimonio: 0, notas: '' }],
+    tracking: [emptyTrackingRow()],
     refAprendizado: '', refProximos: '',
     p3Negocio: '', p3Acoes: '', p3Depois: '', p3Limites: '',
     pfMeta1: 0, pfMeta3: 0,
-    actionsShort: [{ descricao: '', prazo: '', status: '' }],
-    actionsMedium: [{ descricao: '', prazo: '', status: '' }],
-    actionsLong: [{ descricao: '', prazo: '', status: '' }],
+    actionsShort: [emptyActionRow()],
+    actionsMedium: [emptyActionRow()],
+    actionsLong: [emptyActionRow()],
   };
 }

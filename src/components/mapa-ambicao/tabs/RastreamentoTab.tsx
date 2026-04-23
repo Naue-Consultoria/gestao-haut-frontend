@@ -1,6 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react';
 import { DataSection } from '../../ui/DataSection';
-import { MapaDados, TrackingRow } from '../../../types/mapa-ambicao';
+import { MapaDados, TrackingRow, emptyTrackingRow } from '../../../types/mapa-ambicao';
 
 interface RastreamentoTabProps {
   dados: MapaDados;
@@ -11,9 +11,11 @@ const cellInputClass = 'w-full px-3 py-2 bg-gray-50 border border-gray-200 round
 const textareaClass = 'w-full px-4 py-3 bg-gray-50 border border-gray-200 text-gray-700 rounded-sm font-main text-sm outline-none transition-all focus:border-gray-400 focus:bg-white resize-y min-h-[120px]';
 
 export function RastreamentoTab({ dados, onChange }: RastreamentoTabProps) {
-  const tracking = dados.tracking.length > 0
-    ? dados.tracking
-    : [{ data: '', patrimonio: 0, notas: '' }];
+  // tracking is always ≥ 1 row (guaranteed by emptyMapaDados + deleteRow guard);
+  // hydrated rows without an id receive one here for backwards compatibility.
+  const tracking = dados.tracking.map((row) =>
+    row.id ? row : { ...row, id: crypto.randomUUID() }
+  );
 
   const updateRow = (index: number, patch: Partial<TrackingRow>) => {
     const next = tracking.map((row, i) => (i === index ? { ...row, ...patch } : row));
@@ -21,7 +23,7 @@ export function RastreamentoTab({ dados, onChange }: RastreamentoTabProps) {
   };
 
   const addRow = () => {
-    onChange({ tracking: [...tracking, { data: '', patrimonio: 0, notas: '' }] });
+    onChange({ tracking: [...tracking, emptyTrackingRow()] });
   };
 
   const deleteRow = (index: number) => {
@@ -45,7 +47,7 @@ export function RastreamentoTab({ dados, onChange }: RastreamentoTabProps) {
             </thead>
             <tbody>
               {tracking.map((row, idx) => (
-                <tr key={idx}>
+                <tr key={row.id}>
                   <td className="px-4 py-3 text-sm border-b border-gray-100">
                     <input
                       type="date"

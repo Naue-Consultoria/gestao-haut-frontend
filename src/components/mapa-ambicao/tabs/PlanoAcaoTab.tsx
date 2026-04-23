@@ -1,5 +1,5 @@
 import { Plus, Trash2 } from 'lucide-react';
-import { MapaDados, ActionRow } from '../../../types/mapa-ambicao';
+import { MapaDados, ActionRow, emptyActionRow } from '../../../types/mapa-ambicao';
 
 interface PlanoAcaoTabProps {
   dados: MapaDados;
@@ -125,8 +125,7 @@ export function PlanoAcaoTab({ dados, onChange }: PlanoAcaoTabProps) {
   };
   const addAction = (actionsField: PhaseConfig['actionsField']) => {
     const current = dados[actionsField];
-    const empty: ActionRow = { descricao: '', prazo: '', status: '' };
-    onChange({ [actionsField]: [...current, empty] } as Partial<MapaDados>);
+    onChange({ [actionsField]: [...current, emptyActionRow()] } as Partial<MapaDados>);
   };
   const deleteAction = (actionsField: PhaseConfig['actionsField'], index: number) => {
     const current = dados[actionsField];
@@ -188,8 +187,10 @@ export function PlanoAcaoTab({ dados, onChange }: PlanoAcaoTabProps) {
       <h3 className="text-[15px] font-semibold text-gray-900 mb-4 mt-4">Linha do Tempo — Metas Parciais e Ações</h3>
 
       {PHASES.map((phase) => {
-        const actions = dados[phase.actionsField];
-        const effectiveActions = actions.length > 0 ? actions : [{ descricao: '', prazo: '', status: '' as const }];
+        // hydrate rows that lack an id (backwards compatibility with persisted data pre-WR-02)
+        const actions = dados[phase.actionsField].map((row) =>
+          row.id ? row : { ...row, id: crypto.randomUUID() }
+        );
 
         return (
           <div key={phase.phaseKey} className="bg-white border border-gray-200 rounded-[12px] p-6 shadow mb-6">
@@ -228,11 +229,11 @@ export function PlanoAcaoTab({ dados, onChange }: PlanoAcaoTabProps) {
               <span></span>
             </div>
 
-            {effectiveActions.map((row, idx) => (
+            {actions.map((row, idx) => (
               <ActionRowEditor
-                key={idx}
+                key={row.id}
                 row={row}
-                canDelete={effectiveActions.length > 1}
+                canDelete={actions.length > 1}
                 onRowChange={(patch) => updateAction(phase.actionsField, idx, patch)}
                 onDelete={() => deleteAction(phase.actionsField, idx)}
               />
