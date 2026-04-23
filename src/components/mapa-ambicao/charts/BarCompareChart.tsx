@@ -7,13 +7,17 @@ interface BarCompareChartProps {
 }
 
 export function BarCompareChart({ atual, necessario, title }: BarCompareChartProps) {
-  const isEmpty = atual === 0 && necessario === 0;
-  const maxVal = Math.max(1, necessario);
+  const isEmpty = necessario <= 0;  // show placeholder whenever goal is undefined
+  const maxVal = Math.max(1, necessario, atual);  // also scale to atual if it exceeds necessario
   const atualPct = Math.min(100, (atual / maxVal) * 100);
   const diferenca = Math.max(0, necessario - atual);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-[12px] p-6 shadow min-h-[320px]">
+    <div
+      role="img"
+      aria-label={`Patrimônio atual ${fmtBRL(atual)} vs necessário ${fmtBRL(necessario)}`}
+      className="bg-white border border-gray-200 rounded-[12px] p-6 shadow min-h-[320px]"
+    >
       {title && (
         <h3 className="text-[15px] font-semibold tracking-tight mb-4 text-gray-900">{title}</h3>
       )}
