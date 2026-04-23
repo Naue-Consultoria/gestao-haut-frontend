@@ -157,7 +157,9 @@ export function calcDiferenca(necessario: number, atual: number): number {
 
 export function calcTempoEstimado(diferenca: number, rendaAnual: number): number | null {
   if (rendaAnual <= 0) return null;
-  return diferenca / rendaAnual;
+  const result = diferenca / rendaAnual;
+  if (!isFinite(result) || result > 999) return null; // cap implausible values
+  return result;
 }
 
 // ── Formatters ────────────────────────────────────────────────────
@@ -167,12 +169,20 @@ export function fmtBRL(value: number): string {
 }
 
 export function parseBRL(raw: string): number {
-  const cleaned = raw.replace(/[^\d,]/g, '').replace(',', '.');
-  const n = parseFloat(cleaned);
+  // Remove everything except digits and commas, then replace ALL commas with dot
+  const cleaned = raw.replace(/[^\d,]/g, '').replace(/,/g, '.');
+  // If more than one dot remains (e.g. "1.234.567"), keep only the last one as decimal
+  const lastDot = cleaned.lastIndexOf('.');
+  const normalized =
+    lastDot === -1
+      ? cleaned
+      : cleaned.slice(0, lastDot).replace(/\./g, '') + '.' + cleaned.slice(lastDot + 1);
+  const n = parseFloat(normalized);
   return isNaN(n) ? 0 : n;
 }
 
 export function fmtInput(value: number): string {
-  if (!value) return '';
+  if (value === undefined || value === null || isNaN(value)) return '';
+  // Show "0,00" for zero so the controlled input is never blank
   return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
