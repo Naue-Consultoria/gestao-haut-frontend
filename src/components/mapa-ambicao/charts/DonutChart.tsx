@@ -31,6 +31,12 @@ export function DonutChart({ segments, title, size = 180, thickness = 40 }: Donu
         width={200}
         height={200}
         viewBox={`0 0 ${size} ${size}`}
+        role="img"
+        aria-label={
+          isEmpty
+            ? 'Gráfico de despesas — sem dados'
+            : `Composição de despesas: ${positive.map(s => `${s.label} ${((s.value / total) * 100).toFixed(1)}%`).join(', ')}`
+        }
       >
         {isEmpty ? (
           <>
