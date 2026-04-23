@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Download, Loader2 } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Toast } from '../components/ui/Toast';
 import { useToast } from '../hooks/useToast';
+import { useAuth } from '../hooks/useAuth';
 import { useDebouncedEffect } from '../hooks/useDebouncedEffect';
 import { mapaAmbicaoService } from '../services/mapa-ambicao.service';
 import { MapaDados, emptyMapaDados } from '../types/mapa-ambicao';
 import { TabBar, TabId } from '../components/mapa-ambicao/TabBar';
 import { SaveIndicator, SaveState } from '../components/mapa-ambicao/SaveIndicator';
+import { MapaPdfExporter } from '../components/mapa-ambicao/MapaPdfExporter';
 import { PropositorTab } from '../components/mapa-ambicao/tabs/PropositorTab';
 import { RastreamentoTab } from '../components/mapa-ambicao/tabs/RastreamentoTab';
 import { PlanoAcaoTab } from '../components/mapa-ambicao/tabs/PlanoAcaoTab';
@@ -51,10 +54,12 @@ function computeStatus(dados: MapaDados): MapaStatus {
 
 export default function MapaAmbicaoPage() {
   const { toast, showToast } = useToast();
+  const { user } = useAuth();
   const [dados, setDados] = useState<MapaDados>(emptyMapaDados);
   const [activeTab, setActiveTab] = useState<TabId>('proposito');
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const isHydratingRef = useRef(true);
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -135,7 +140,20 @@ export default function MapaAmbicaoPage() {
       <PageHeader
         title="Mapa de Ambição"
         description="Seu plano de vida e ambição"
-        action={<SaveIndicator state={saveState} />}
+        action={
+          <div className="flex items-center gap-4">
+            <SaveIndicator state={saveState} />
+            <button
+              type="button"
+              onClick={() => setExporting(true)}
+              disabled={exporting || loading}
+              className="flex items-center gap-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-sm hover:bg-black disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer transition-all"
+            >
+              {exporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+              {exporting ? 'Exportando...' : 'Exportar PDF'}
+            </button>
+          </div>
+        }
       />
 
       <TabBar activeTab={activeTab} onChange={setActiveTab} />
@@ -163,6 +181,17 @@ export default function MapaAmbicaoPage() {
           )}
           {activeTab === 'dashboard' && <DashboardTab dados={dados} onChange={handleChange} />}
         </>
+      )}
+
+      {exporting && (
+        <MapaPdfExporter
+          dados={dados}
+          brokerName={user?.name ?? 'corretor'}
+          onDone={(ok) => {
+            setExporting(false);
+            if (!ok) showToast('Erro ao exportar PDF. Tente novamente.');
+          }}
+        />
       )}
 
       <Toast message={toast.message} isVisible={toast.visible} />

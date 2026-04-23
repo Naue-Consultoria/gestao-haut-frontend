@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Download, Loader2 } from 'lucide-react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Tag } from '../components/ui/Tag';
 import { Toast } from '../components/ui/Toast';
@@ -8,6 +8,7 @@ import { useToast } from '../hooks/useToast';
 import { mapaAmbicaoGestorService } from '../services/mapa-ambicao-gestor.service';
 import { MapaAmbicao, MapaDados, emptyMapaDados } from '../types/mapa-ambicao';
 import { TabBar, TabId } from '../components/mapa-ambicao/TabBar';
+import { MapaPdfExporter } from '../components/mapa-ambicao/MapaPdfExporter';
 import { PropositorTab } from '../components/mapa-ambicao/tabs/PropositorTab';
 import { RastreamentoTab } from '../components/mapa-ambicao/tabs/RastreamentoTab';
 import { PlanoAcaoTab } from '../components/mapa-ambicao/tabs/PlanoAcaoTab';
@@ -49,6 +50,7 @@ export default function MapaAmbicaoReadOnlyPage() {
   const [activeTab, setActiveTab] = useState<TabId>('proposito');
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     if (!brokerId) return;
@@ -99,12 +101,23 @@ export default function MapaAmbicaoReadOnlyPage() {
         title={brokerName ? `Mapa de Ambição — ${brokerName}` : 'Mapa de Ambição'}
         description="Visualização read-only — alterações apenas pelo próprio corretor."
         action={
-          mapa && (
-            <div className="flex items-center gap-3">
-              <StatusBadge status={mapa.status} />
-              <span className="text-xs text-gray-500">Atualizado: {fmtDateTime(mapa.updated_at)}</span>
-            </div>
-          )
+          <div className="flex items-center gap-3">
+            {mapa && (
+              <>
+                <StatusBadge status={mapa.status} />
+                <span className="text-xs text-gray-500">Atualizado: {fmtDateTime(mapa.updated_at)}</span>
+              </>
+            )}
+            <button
+              type="button"
+              onClick={() => setExporting(true)}
+              disabled={exporting || loading || !mapa}
+              className="flex items-center gap-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-semibold rounded-sm hover:bg-black disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer transition-all"
+            >
+              {exporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+              {exporting ? 'Exportando...' : 'Exportar PDF'}
+            </button>
+          </div>
         }
       />
 
@@ -137,6 +150,17 @@ export default function MapaAmbicaoReadOnlyPage() {
           )}
           {activeTab === 'dashboard' && <DashboardTab dados={dados} onChange={noopChange} />}
         </fieldset>
+      )}
+
+      {exporting && mapa && (
+        <MapaPdfExporter
+          dados={dados}
+          brokerName={brokerName ?? 'corretor'}
+          onDone={(ok) => {
+            setExporting(false);
+            if (!ok) showToast('Erro ao exportar PDF. Tente novamente.');
+          }}
+        />
       )}
 
       <Toast message={toast.message} isVisible={toast.visible} />
