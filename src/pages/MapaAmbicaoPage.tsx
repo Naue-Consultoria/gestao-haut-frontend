@@ -86,36 +86,36 @@ export default function MapaAmbicaoPage() {
     setDados((prev) => ({ ...prev, ...patch }));
   }, []);
 
-  // Autosave: 2s debounce after last change to `dados`
-  useDebouncedEffect(
-    () => {
-      if (isHydratingRef.current) return; // don't save during initial load
-      if (loading) return;
+  // Autosave: 2s debounce after last change to `dados`.
+  // Memoised so the callbackRef update in useDebouncedEffect only fires when
+  // the actual closure dependencies change, not on every render.
+  const autosaveCallback = useCallback(() => {
+    if (isHydratingRef.current) return; // don't save during initial load
+    if (loading) return;
 
-      // Cancel any in-flight request
-      if (abortRef.current) abortRef.current.abort();
-      abortRef.current = new AbortController();
+    // Cancel any in-flight request
+    if (abortRef.current) abortRef.current.abort();
+    abortRef.current = new AbortController();
 
-      setSaveState('saving');
-      const status = computeStatus(dados);
+    setSaveState('saving');
+    const status = computeStatus(dados);
 
-      mapaAmbicaoService
-        .upsert(dados, status, abortRef.current.signal)
-        .then(() => {
-          setSaveState('saved');
-          if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
-          savedTimerRef.current = setTimeout(() => setSaveState('idle'), 3000);
-        })
-        .catch((err) => {
-          if (err?.name === 'CanceledError' || err?.name === 'AbortError') return;
-          console.error('Erro ao salvar Mapa de Ambição', err);
-          setSaveState('error');
-          showToast('Erro ao salvar o Mapa de Ambição. Tente novamente.');
-        });
-    },
-    [dados],
-    2000
-  );
+    mapaAmbicaoService
+      .upsert(dados, status, abortRef.current.signal)
+      .then(() => {
+        setSaveState('saved');
+        if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+        savedTimerRef.current = setTimeout(() => setSaveState('idle'), 3000);
+      })
+      .catch((err) => {
+        if (err?.name === 'CanceledError' || err?.name === 'AbortError') return;
+        console.error('Erro ao salvar Mapa de Ambição', err);
+        setSaveState('error');
+        showToast('Erro ao salvar o Mapa de Ambição. Tente novamente.');
+      });
+  }, [dados, loading, showToast]);
+
+  useDebouncedEffect(autosaveCallback, [dados], 2000);
 
   return (
     <div>
