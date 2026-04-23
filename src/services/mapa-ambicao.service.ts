@@ -24,9 +24,14 @@ export const mapaAmbicaoService = {
   /**
    * Upsert do Mapa de Ambição do corretor autenticado.
    * Envia `{ dados, status }` no body; backend retorna o registro atualizado.
+   * Aceita um AbortSignal opcional para cancelar a requisição em andamento.
    */
-  upsert: async (dados: MapaDados, status: 'vazio' | 'parcial' | 'preenchido'): Promise<MapaAmbicao> => {
-    const res = await api.put('/mapa-ambicao', { dados, status });
+  upsert: async (
+    dados: MapaDados,
+    status: 'vazio' | 'parcial' | 'preenchido',
+    signal?: AbortSignal
+  ): Promise<MapaAmbicao> => {
+    const res = await api.put('/mapa-ambicao', { dados, status }, { signal });
     return res.data.data as MapaAmbicao;
   },
 };

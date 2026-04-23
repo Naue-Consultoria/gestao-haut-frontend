@@ -100,7 +100,7 @@ export default function MapaAmbicaoPage() {
       const status = computeStatus(dados);
 
       mapaAmbicaoService
-        .upsert(dados, status)
+        .upsert(dados, status, abortRef.current.signal)
         .then(() => {
           setSaveState('saved');
           if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
