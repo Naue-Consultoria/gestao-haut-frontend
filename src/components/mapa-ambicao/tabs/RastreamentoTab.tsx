@@ -5,12 +5,13 @@ import { MapaDados, TrackingRow, emptyTrackingRow } from '../../../types/mapa-am
 interface RastreamentoTabProps {
   dados: MapaDados;
   onChange: (patch: Partial<MapaDados>) => void;
+  patrimonioNecessario?: number;
 }
 
 const cellInputClass = 'w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-sm text-sm font-main outline-none transition-all focus:border-gray-400 focus:bg-white';
 const textareaClass = 'w-full px-4 py-3 bg-gray-50 border border-gray-200 text-gray-700 rounded-sm font-main text-sm outline-none transition-all focus:border-gray-400 focus:bg-white resize-y min-h-[120px]';
 
-export function RastreamentoTab({ dados, onChange }: RastreamentoTabProps) {
+export function RastreamentoTab({ dados, onChange, patrimonioNecessario = 0 }: RastreamentoTabProps) {
   // tracking is always ≥ 1 row (guaranteed by emptyMapaDados + deleteRow guard);
   // hydrated rows without an id receive one here for backwards compatibility.
   const tracking = dados.tracking.map((row) =>
@@ -69,7 +70,11 @@ export function RastreamentoTab({ dados, onChange }: RastreamentoTabProps) {
                       className={cellInputClass}
                     />
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-500 border-b border-gray-100">—</td>
+                  <td className="px-4 py-3 text-sm text-gray-500 border-b border-gray-100">
+                    {patrimonioNecessario > 0
+                      ? ((row.patrimonio / patrimonioNecessario) * 100).toFixed(1) + '%'
+                      : '—'}
+                  </td>
                   <td className="px-4 py-3 text-sm border-b border-gray-100">
                     <input
                       type="text"

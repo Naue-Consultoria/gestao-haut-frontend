@@ -1,9 +1,11 @@
 import { Plus, Trash2 } from 'lucide-react';
 import { MapaDados, ActionRow, emptyActionRow } from '../../../types/mapa-ambicao';
+import { fmtBRL } from '../../../utils/mapaCalc';
 
 interface PlanoAcaoTabProps {
   dados: MapaDados;
   onChange: (patch: Partial<MapaDados>) => void;
+  patrimonioNecessario?: number;
 }
 
 const textareaClass = 'w-full px-4 py-3 bg-gray-50 border border-gray-200 text-gray-700 rounded-sm font-main text-sm outline-none transition-all focus:border-gray-400 focus:bg-white resize-y min-h-[120px]';
@@ -117,7 +119,7 @@ const PHASES: PhaseConfig[] = [
   },
 ];
 
-export function PlanoAcaoTab({ dados, onChange }: PlanoAcaoTabProps) {
+export function PlanoAcaoTab({ dados, onChange, patrimonioNecessario = 0 }: PlanoAcaoTabProps) {
   const updateAction = (actionsField: PhaseConfig['actionsField'], index: number, patch: Partial<ActionRow>) => {
     const current = dados[actionsField];
     const next = current.map((row, i) => (i === index ? { ...row, ...patch } : row));
@@ -150,7 +152,9 @@ export function PlanoAcaoTab({ dados, onChange }: PlanoAcaoTabProps) {
         <h3 className="text-[15px] font-semibold text-gray-900 mb-3">Patrimônio Necessário</h3>
         <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-sm px-6 py-4">
           <span className="text-sm text-gray-600">Patrimônio Necessário (calculado)</span>
-          <span className="text-[15px] font-semibold text-gray-900">—</span>
+          <span className="text-[15px] font-semibold text-gray-900">
+            {patrimonioNecessario > 0 ? fmtBRL(patrimonioNecessario) : '—'}
+          </span>
         </div>
         <p className="text-xs text-gray-400 mt-2">Preenchido automaticamente a partir da aba Estilo de Vida.</p>
       </div>
@@ -218,7 +222,9 @@ export function PlanoAcaoTab({ dados, onChange }: PlanoAcaoTabProps) {
                   className={metaInputClass}
                 />
               ) : (
-                <span className="text-[15px] font-semibold text-gray-900">—</span>
+                <span className="text-[15px] font-semibold text-gray-900">
+                  {patrimonioNecessario > 0 ? fmtBRL(patrimonioNecessario) : '—'}
+                </span>
               )}
             </div>
 
