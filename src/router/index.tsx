@@ -19,6 +19,7 @@ import UsuariosPage from '../pages/UsuariosPage';
 import RelatoriosPage from '../pages/RelatoriosPage';
 import RelatorioPreviewPage from '../pages/RelatorioPreviewPage';
 import ParceriasPage from '../pages/ParceriasPage';
+import MapaAmbicaoPage from '../pages/MapaAmbicaoPage';
 
 export function AppRouter() {
   return (
@@ -40,6 +41,7 @@ export function AppRouter() {
           <Route path="metas" element={<GestorRoute><MetasPage /></GestorRoute>} />
           <Route path="comentarios" element={<ComentariosPage />} />
           <Route path="planos-acao" element={<PlanosAcaoPage />} />
+          <Route path="mapa-ambicao" element={<MapaAmbicaoPage />} />
           <Route path="parcerias" element={<GestorRoute><ParceriasPage /></GestorRoute>} />
           <Route path="usuarios" element={<GestorRoute><UsuariosPage /></GestorRoute>} />
           <Route path="relatorios" element={<GestorRoute><RelatoriosPage /></GestorRoute>} />

@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutGrid, User, Activity, Search, Layers, BookOpen, DollarSign,
-  BarChart3, Target, MessageSquare, ClipboardList, Users, FileText, LogOut, ChevronsLeft, ChevronsRight, Camera, UserPlus
+  BarChart3, Target, MessageSquare, ClipboardList, Users, FileText, LogOut, ChevronsLeft, ChevronsRight, Camera, UserPlus, Map
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { Avatar } from '../ui/Avatar';
@@ -26,6 +26,7 @@ const gestaoNav = [
   { path: '/metas', label: 'Definir Metas', icon: Target, gestorOnly: true },
   { path: '/comentarios', label: 'Comentários', icon: MessageSquare },
   { path: '/planos-acao', label: 'Plano de Ação', icon: ClipboardList },
+  { path: '/mapa-ambicao', label: 'Mapa de Ambição', icon: Map },
   { path: '/parcerias', label: 'Parcerias', icon: UserPlus, gestorOnly: true },
   { path: '/usuarios', label: 'Usuários', icon: Users, gestorOnly: true },
   { path: '/relatorios', label: 'Relatórios', icon: FileText, gestorOnly: true },
