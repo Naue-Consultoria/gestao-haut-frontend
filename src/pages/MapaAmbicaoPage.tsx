@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Toast } from '../components/ui/Toast';
 import { useToast } from '../hooks/useToast';
@@ -10,19 +10,23 @@ import { SaveIndicator, SaveState } from '../components/mapa-ambicao/SaveIndicat
 import { PropositorTab } from '../components/mapa-ambicao/tabs/PropositorTab';
 import { RastreamentoTab } from '../components/mapa-ambicao/tabs/RastreamentoTab';
 import { PlanoAcaoTab } from '../components/mapa-ambicao/tabs/PlanoAcaoTab';
-import { PlaceholderTab } from '../components/mapa-ambicao/tabs/PlaceholderTab';
+import { EstiloDeVidaTab } from '../components/mapa-ambicao/tabs/EstiloDeVidaTab';
+import { EstratificacaoTab } from '../components/mapa-ambicao/tabs/EstratificacaoTab';
+import { DashboardTab } from '../components/mapa-ambicao/tabs/DashboardTab';
+import { calcCustoAnual, calcPatrimonioAtual, calcPatrimonioNecessario } from '../utils/mapaCalc';
 
 type MapaStatus = 'vazio' | 'parcial' | 'preenchido';
 
 function computeStatus(dados: MapaDados): MapaStatus {
   const hasVisao = dados.p1Visao.trim() !== '';
+  const hasNegocio = dados.p3Negocio.trim() !== '';
   const hasAnyNarrative =
     hasVisao ||
+    hasNegocio ||
     dados.p1Atividades.trim() !== '' ||
     dados.p1Legado.trim() !== '' ||
     dados.p1Causas.trim() !== '' ||
     dados.p1Dia.trim() !== '' ||
-    dados.p3Negocio.trim() !== '' ||
     dados.p3Acoes.trim() !== '' ||
     dados.p3Depois.trim() !== '' ||
     dados.p3Limites.trim() !== '' ||
@@ -32,11 +36,14 @@ function computeStatus(dados: MapaDados): MapaStatus {
   const hasActionContent = [dados.actionsShort, dados.actionsMedium, dados.actionsLong].some((arr) =>
     arr.some((r) => r.descricao.trim() !== '' || r.prazo.trim() !== '' || r.status !== '')
   );
+  const custoAnual = calcCustoAnual(dados.expenses || {});
+  const patrimonioAtual = calcPatrimonioAtual(dados.assets || {});
 
-  if (!hasAnyNarrative && !hasTrackingContent && !hasActionContent && dados.pfMeta1 === 0 && dados.pfMeta3 === 0) {
+  if (!hasAnyNarrative && !hasTrackingContent && !hasActionContent && dados.pfMeta1 === 0 && dados.pfMeta3 === 0 && custoAnual === 0 && patrimonioAtual === 0 && (dados.rendaAnual ?? 0) === 0) {
     return 'vazio';
   }
-  if (hasVisao && hasTrackingContent) {
+  // Phase 5 refinement: "preenchido" requires both narrative anchor AND financial anchor
+  if ((hasVisao || hasNegocio) && custoAnual > 0 && patrimonioAtual > 0) {
     return 'preenchido';
   }
   return 'parcial';
@@ -85,6 +92,12 @@ export default function MapaAmbicaoPage() {
   const handleChange = useCallback((patch: Partial<MapaDados>) => {
     setDados((prev) => ({ ...prev, ...patch }));
   }, []);
+
+  const custoAnual = useMemo(() => calcCustoAnual(dados.expenses || {}), [dados.expenses]);
+  const patrimonioNecessario = useMemo(
+    () => (custoAnual > 0 ? calcPatrimonioNecessario(custoAnual) : 0),
+    [custoAnual]
+  );
 
   // Autosave: 2s debounce after last change to `dados`.
   // Memoised so the callbackRef update in useDebouncedEffect only fires when
@@ -140,9 +153,15 @@ export default function MapaAmbicaoPage() {
       ) : (
         <>
           {activeTab === 'proposito' && <PropositorTab dados={dados} onChange={handleChange} />}
-          {activeTab === 'rastreamento' && <RastreamentoTab dados={dados} onChange={handleChange} />}
-          {activeTab === 'plano' && <PlanoAcaoTab dados={dados} onChange={handleChange} />}
-          {(activeTab === 'dashboard' || activeTab === 'estilo' || activeTab === 'patrimonio') && <PlaceholderTab />}
+          {activeTab === 'estilo' && <EstiloDeVidaTab dados={dados} onChange={handleChange} />}
+          {activeTab === 'patrimonio' && <EstratificacaoTab dados={dados} onChange={handleChange} />}
+          {activeTab === 'rastreamento' && (
+            <RastreamentoTab dados={dados} onChange={handleChange} patrimonioNecessario={patrimonioNecessario} />
+          )}
+          {activeTab === 'plano' && (
+            <PlanoAcaoTab dados={dados} onChange={handleChange} patrimonioNecessario={patrimonioNecessario} />
+          )}
+          {activeTab === 'dashboard' && <DashboardTab dados={dados} onChange={handleChange} />}
         </>
       )}
 
