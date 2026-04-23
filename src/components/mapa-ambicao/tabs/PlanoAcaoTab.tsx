@@ -74,7 +74,7 @@ function ActionRowEditor({ row, canDelete, onRowChange, onDelete }: {
 }
 
 function currencyFmt(v: number): string {
-  if (!v) return '';
+  if (v === 0 || !isFinite(v)) return '';
   return v.toString();
 }
 
