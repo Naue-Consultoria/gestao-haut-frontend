@@ -10,6 +10,8 @@ export const ORIGENS: { value: string; label: string }[] = [
   { value: 'PATROCINADO', label: 'Patrocinado' },
   { value: 'CORRETOR_EXTERNO', label: 'Corretor Externo' },
   { value: 'CORRETOR_INTERNO', label: 'Corretor Interno' },
+  { value: 'CLIENTE_DE_CARTEIRA', label: 'Cliente de Carteira' },
+  { value: 'PROSPECCAO_ATIVA', label: 'Prospecção Ativa' },
   { value: 'PORTAL', label: 'Portal' },
   { value: 'PLANTAO_HAUT', label: 'Plantão Haut' },
   { value: 'GRUPO_CORRETORES_WHATSAPP', label: 'Grupo de Corretores (WhatsApp)' },

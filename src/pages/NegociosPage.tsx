@@ -32,6 +32,7 @@ export default function NegociosPage() {
   const [oportunidade, setOportunidade] = useState('');
   const [origem, setOrigem] = useState('RELACIONAMENTO');
   const [vgv, setVgv] = useState('');
+  const [notas, setNotas] = useState('');
 
   const load = useCallback(() => {
     const brokerId = getListBrokerId();
@@ -45,17 +46,17 @@ export default function NegociosPage() {
   const totalVGV = data.reduce((s, n) => s + Number(n.vgv), 0);
 
   const resetForm = () => {
-    setModalOpen(false); setEditingId(null); setOportunidade(''); setOrigem('RELACIONAMENTO'); setVgv('');
+    setModalOpen(false); setEditingId(null); setOportunidade(''); setOrigem('RELACIONAMENTO'); setVgv(''); setNotas('');
   };
 
   const handleSave = async () => {
     if (!oportunidade) { showToast('Preencha a oportunidade'); return; }
     try {
       if (editingId) {
-        await negociosService.update(editingId, { oportunidade, origem, vgv: Number(vgv) || 0 });
+        await negociosService.update(editingId, { oportunidade, origem, vgv: Number(vgv) || 0, notas });
         showToast('Negócio atualizado');
       } else {
-        const payload: any = { month, year, oportunidade, origem: origem as Negocio['origem'], vgv: Number(vgv) || 0 };
+        const payload: any = { month, year, oportunidade, origem: origem as Negocio['origem'], vgv: Number(vgv) || 0, notas };
         if (isGestor) payload.broker_id = getEffectiveBrokerId();
         await negociosService.create(payload);
         showToast('Negócio registrado');
@@ -69,6 +70,7 @@ export default function NegociosPage() {
     setOportunidade(row.oportunidade);
     setOrigem(row.origem);
     setVgv(String(row.vgv));
+    setNotas(row.notas || '');
     setModalOpen(true);
   };
 
@@ -138,6 +140,9 @@ export default function NegociosPage() {
           <FormGroup label="Origem"><select value={origem} onChange={e => setOrigem(e.target.value)} className={inputClass}>{ORIGENS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></FormGroup>
           <FormGroup label="VGV Bruto (R$)"><CurrencyInput value={vgv} onChange={setVgv} className={inputClass} /></FormGroup>
         </FormRow>
+        <FormGroup label="Notas">
+          <textarea value={notas} onChange={e => setNotas(e.target.value)} placeholder="Adicione observações sobre o negócio..." rows={4} className={`${inputClass} resize-none`} />
+        </FormGroup>
         <div className="flex gap-3 justify-end mt-6"><Button variant="outline" onClick={resetForm}>Cancelar</Button><Button onClick={handleSave}>{editingId ? 'Atualizar' : 'Salvar'}</Button></div>
       </Modal>
       <Toast message={toast.message} isVisible={toast.visible} />

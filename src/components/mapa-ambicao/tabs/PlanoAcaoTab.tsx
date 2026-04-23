@@ -19,7 +19,7 @@ function TextCard({ num, heading, placeholder, rows, value, onChange }: {
   value: string; onChange: (v: string) => void;
 }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-[12px] p-6 shadow">
+    <div className="bg-white border border-gray-200 rounded-[12px] p-6 shadow mb-6">
       <div className="text-[11px] font-semibold tracking-[2px] uppercase text-gray-500 mb-1">{num}</div>
       <h3 className="text-[15px] font-semibold text-gray-900 mb-4">{heading}</h3>
       <textarea
@@ -137,7 +137,8 @@ export function PlanoAcaoTab({ dados, onChange, patrimonioNecessario = 0 }: Plan
 
   return (
     <>
-      <TextCard
+      <div className="mb-6">
+        <TextCard
         num="Pergunta 1"
         heading="Sua Cadeira Atual"
         placeholder="Como está seu negócio hoje — forças, limites, o que já funciona."
@@ -145,9 +146,10 @@ export function PlanoAcaoTab({ dados, onChange, patrimonioNecessario = 0 }: Plan
         value={dados.p3Negocio}
         onChange={(v) => onChange({ p3Negocio: v })}
       />
+      </div>
 
       {/* Patrimônio Necessário — read-only display */}
-      <div className="bg-white border border-gray-200 rounded-[12px] p-6 shadow">
+      <div className="bg-white border border-gray-200 rounded-[12px] p-6 shadow mb-6">
         <div className="text-[11px] font-semibold tracking-[2px] uppercase text-gray-500 mb-1">Pergunta 2</div>
         <h3 className="text-[15px] font-semibold text-gray-900 mb-3">Patrimônio Necessário</h3>
         <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-sm px-6 py-4">
@@ -259,3 +261,4 @@ export function PlanoAcaoTab({ dados, onChange, patrimonioNecessario = 0 }: Plan
     </>
   );
 }
+
