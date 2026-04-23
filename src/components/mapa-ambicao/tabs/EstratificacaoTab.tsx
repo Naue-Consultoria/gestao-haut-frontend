@@ -1,10 +1,9 @@
 import { MapaDados } from '../../../types/mapa-ambicao';
+import { CurrencyInput } from '../../ui/CurrencyInput';
 import {
   ASSET_CATEGORIES,
   calcPatrimonioAtual,
   fmtBRL,
-  fmtInput,
-  parseBRL,
 } from '../../../utils/mapaCalc';
 
 interface EstratificacaoTabProps {
@@ -57,11 +56,10 @@ export function EstratificacaoTab({ dados, onChange }: EstratificacaoTabProps) {
                 />
                 <span className="text-sm text-gray-700">{asset.label}</span>
               </div>
-              <input
-                type="text"
-                value={fmtInput(value)}
-                onChange={(e) => updateAsset(asset.id, parseBRL(e.target.value))}
-                placeholder="R$ 0,00"
+              <CurrencyInput
+                value={value ? String(value) : ''}
+                onChange={(raw) => updateAsset(asset.id, Number(raw) || 0)}
+                placeholder="0,00"
                 className="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-sm text-sm font-main outline-none focus:border-gray-400 focus:bg-white text-right transition-all"
               />
               <span className="text-sm text-gray-700 font-medium text-right">{pctDisplay}</span>

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { MapaDados } from '../../../types/mapa-ambicao';
+import { CurrencyInput } from '../../ui/CurrencyInput';
 import {
   EXPENSE_SECTIONS,
   EXPENSE_CATEGORY_COLORS,
@@ -11,8 +12,6 @@ import {
   calcDiferenca,
   calcTempoEstimado,
   fmtBRL,
-  fmtInput,
-  parseBRL,
 } from '../../../utils/mapaCalc';
 import { DonutChart, DonutSegment } from '../charts/DonutChart';
 import { BarCompareChart } from '../charts/BarCompareChart';
@@ -150,11 +149,10 @@ export function DashboardTab({ dados, onChange }: DashboardTabProps) {
           Informe sua renda anual estimada para calcular o Tempo Estimado de acumulação.
         </p>
         <div className="flex items-center gap-4 max-w-xs">
-          <input
-            type="text"
-            value={fmtInput(rendaAnual)}
-            onChange={(e) => onChange({ rendaAnual: parseBRL(e.target.value) })}
-            placeholder="R$ 0,00"
+          <CurrencyInput
+            value={rendaAnual ? String(rendaAnual) : ''}
+            onChange={(raw) => onChange({ rendaAnual: Number(raw) || 0 })}
+            placeholder="0,00"
             className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-sm text-sm font-main outline-none focus:border-gray-400 focus:bg-white text-right transition-all"
           />
         </div>

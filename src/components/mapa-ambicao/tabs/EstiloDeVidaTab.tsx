@@ -1,12 +1,11 @@
 import { MapaDados } from '../../../types/mapa-ambicao';
+import { CurrencyInput } from '../../ui/CurrencyInput';
 import {
   EXPENSE_SECTIONS,
   ExpenseSectionItem,
   calcCustoAnual,
   calcPatrimonioNecessario,
   fmtBRL,
-  fmtInput,
-  parseBRL,
 } from '../../../utils/mapaCalc';
 
 interface EstiloDeVidaTabProps {
@@ -57,10 +56,10 @@ export function EstiloDeVidaTab({ dados, onChange }: EstiloDeVidaTabProps) {
             </div>
 
             {/* Column header */}
-            <div className="grid grid-cols-[1fr_200px_160px_200px] gap-0 px-6 py-2 border-b border-gray-100 text-[10px] font-semibold tracking-widest uppercase text-gray-400">
+            <div className="grid grid-cols-[1fr_200px_180px_200px] gap-x-5 px-6 py-2 border-b border-gray-100 text-[10px] font-semibold tracking-widest uppercase text-gray-400">
               <span>Despesa</span>
               <span>{monthlyHeader}</span>
-              <span>Anual (R$)</span>
+              <span className="pl-2">Anual (R$)</span>
               <span>Observações</span>
             </div>
 
@@ -72,7 +71,7 @@ export function EstiloDeVidaTab({ dados, onChange }: EstiloDeVidaTabProps) {
               return (
                 <div
                   key={item.id}
-                  className="grid grid-cols-[1fr_200px_160px_200px] gap-0 px-6 py-3 border-b border-gray-100 last:border-0 items-center"
+                  className="grid grid-cols-[1fr_200px_180px_200px] gap-x-5 px-6 py-3 border-b border-gray-100 last:border-0 items-center"
                 >
                   <span className="text-sm text-gray-700 pr-4">{item.label}</span>
 
@@ -88,25 +87,23 @@ export function EstiloDeVidaTab({ dados, onChange }: EstiloDeVidaTabProps) {
                         className="w-14 px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-sm text-sm text-center outline-none focus:border-gray-400 focus:bg-white"
                       />
                       <span className="text-gray-400 text-xs">×</span>
-                      <input
-                        type="text"
-                        value={fmtInput(expenses[item.id + '-custo'] ?? 0)}
-                        onChange={(e) => updateExpense(item.id + '-custo', parseBRL(e.target.value))}
-                        placeholder="R$ 0"
+                      <CurrencyInput
+                        value={expenses[item.id + '-custo'] ? String(expenses[item.id + '-custo']) : ''}
+                        onChange={(raw) => updateExpense(item.id + '-custo', Number(raw) || 0)}
+                        placeholder="0,00"
                         className="w-24 px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-sm text-sm outline-none focus:border-gray-400 focus:bg-white text-right"
                       />
                     </div>
                   ) : (
-                    <input
-                      type="text"
-                      value={fmtInput(expenses[item.id] ?? 0)}
-                      onChange={(e) => updateExpense(item.id, parseBRL(e.target.value))}
-                      placeholder="R$ 0,00"
+                    <CurrencyInput
+                      value={expenses[item.id] ? String(expenses[item.id]) : ''}
+                      onChange={(raw) => updateExpense(item.id, Number(raw) || 0)}
+                      placeholder="0,00"
                       className={inputClass}
                     />
                   )}
 
-                  <span className="text-sm text-gray-700 font-medium">{annualDisplay}</span>
+                  <span className="pl-2 text-sm text-gray-700 font-medium">{annualDisplay}</span>
 
                   <input
                     type="text"

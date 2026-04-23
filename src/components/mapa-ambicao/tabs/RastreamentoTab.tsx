@@ -1,5 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react';
 import { DataSection } from '../../ui/DataSection';
+import { CurrencyInput } from '../../ui/CurrencyInput';
 import { MapaDados, TrackingRow, emptyTrackingRow } from '../../../types/mapa-ambicao';
 
 interface RastreamentoTabProps {
@@ -58,15 +59,10 @@ export function RastreamentoTab({ dados, onChange, patrimonioNecessario = 0 }: R
                     />
                   </td>
                   <td className="px-4 py-3 text-sm border-b border-gray-100">
-                    <input
-                      type="text"
-                      value={row.patrimonio ? row.patrimonio.toString() : ''}
-                      onChange={(e) => {
-                        const raw = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
-                        const num = parseFloat(raw);
-                        updateRow(idx, { patrimonio: isNaN(num) ? 0 : num });
-                      }}
-                      placeholder="R$ 0,00"
+                    <CurrencyInput
+                      value={row.patrimonio ? String(row.patrimonio) : ''}
+                      onChange={(raw) => updateRow(idx, { patrimonio: Number(raw) || 0 })}
+                      placeholder="0,00"
                       className={cellInputClass}
                     />
                   </td>

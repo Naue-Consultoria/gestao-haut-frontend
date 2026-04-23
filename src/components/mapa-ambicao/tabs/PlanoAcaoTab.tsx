@@ -1,5 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react';
 import { MapaDados, ActionRow, emptyActionRow } from '../../../types/mapa-ambicao';
+import { CurrencyInput } from '../../ui/CurrencyInput';
 import { fmtBRL } from '../../../utils/mapaCalc';
 
 interface PlanoAcaoTabProps {
@@ -73,17 +74,6 @@ function ActionRowEditor({ row, canDelete, onRowChange, onDelete }: {
       </div>
     </div>
   );
-}
-
-function currencyFmt(v: number): string {
-  if (v === 0 || !isFinite(v)) return '';
-  return v.toString();
-}
-
-function parseCurrency(raw: string): number {
-  const cleaned = raw.replace(/[^\d.,]/g, '').replace(',', '.');
-  const n = parseFloat(cleaned);
-  return isNaN(n) ? 0 : n;
 }
 
 interface PhaseConfig {
@@ -216,11 +206,10 @@ export function PlanoAcaoTab({ dados, onChange, patrimonioNecessario = 0 }: Plan
             <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-sm px-4 py-3 mb-4">
               <span className="text-sm text-gray-600">Meta de Patrimônio — Ano {phase.num}</span>
               {phase.metaField ? (
-                <input
-                  type="text"
-                  value={currencyFmt(dados[phase.metaField])}
-                  onChange={(e) => onChange({ [phase.metaField!]: parseCurrency(e.target.value) } as Partial<MapaDados>)}
-                  placeholder="R$ 0,00"
+                <CurrencyInput
+                  value={dados[phase.metaField] ? String(dados[phase.metaField]) : ''}
+                  onChange={(raw) => onChange({ [phase.metaField!]: Number(raw) || 0 } as Partial<MapaDados>)}
+                  placeholder="0,00"
                   className={metaInputClass}
                 />
               ) : (

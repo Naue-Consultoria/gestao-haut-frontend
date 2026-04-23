@@ -158,7 +158,7 @@ export function calcDiferenca(necessario: number, atual: number): number {
 export function calcTempoEstimado(diferenca: number, rendaAnual: number): number | null {
   if (rendaAnual <= 0) return null;
   const result = diferenca / rendaAnual;
-  if (!isFinite(result) || result > 999) return null; // cap implausible values
+  if (!isFinite(result)) return null;
   return result;
 }
 
