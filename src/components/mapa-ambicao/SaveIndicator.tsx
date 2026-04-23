@@ -10,7 +10,7 @@ export function SaveIndicator({ state }: SaveIndicatorProps) {
   const config = {
     saving: { dot: 'bg-warning', label: 'Salvando...', textClass: 'text-gray-500' },
     saved: { dot: 'bg-positive', label: 'Salvo', textClass: 'text-gray-500' },
-    error: { dot: 'bg-negative', label: 'Erro ao salvar', textClass: 'text-negative' },
+    error: { dot: 'bg-negative', label: 'Erro ao salvar', textClass: 'text-gray-500 text-negative' },
   }[state];
 
   return (

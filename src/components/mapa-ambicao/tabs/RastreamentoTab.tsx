@@ -108,7 +108,7 @@ export function RastreamentoTab({ dados, onChange }: RastreamentoTabProps) {
         </div>
       </DataSection>
 
-      <div className="grid grid-cols-2 gap-6 max-lg:grid-cols-1">
+      <div className="grid grid-cols-2 gap-6 mt-6 max-lg:grid-cols-1">
         <div className="bg-white border border-gray-200 rounded-[12px] p-6 shadow">
           <div className="text-[11px] font-semibold tracking-[2px] uppercase text-gray-500 mb-1">Reflexão</div>
           <h3 className="text-[15px] font-semibold text-gray-900 mb-4">Maior aprendizado preenchendo o Mapa</h3>
