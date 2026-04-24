@@ -1,4 +1,5 @@
 import { ReportData } from '../services/reports.service';
+import { labelOrigem } from './formatters';
 
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const MONTHS_SHORT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
@@ -28,10 +29,6 @@ const tagColor: Record<string, string> = {
   'CORRETOR INTERNO': 'tag-cyan',
   'PORTAL': 'tag-dark',
 };
-
-function originLabel(orig: string): string {
-  return orig.replace(/_/g, ' ');
-}
 
 export function buildReportHtml(data: ReportData, month: number, year: number): string {
   const monthName = MONTHS[month];
@@ -64,7 +61,7 @@ export function buildReportHtml(data: ReportData, month: number, year: number): 
   // Origens aggregation for doughnut
   const origensMap: Record<string, number> = {};
   data.negocios.forEach(n => {
-    const key = originLabel(n.origem);
+    const key = labelOrigem(n.origem);
     origensMap[key] = (origensMap[key] || 0) + n.vgv;
   });
 
@@ -102,13 +99,13 @@ export function buildReportHtml(data: ReportData, month: number, year: number): 
 
   // Build captacoes table rows
   const captacoesRows = data.captacoes.map(c => `
-    <tr><td class="bold">${escapeHtml(c.oportunidade)}</td><td><span class="tag tag-dark">${c.exclusivo}</span></td><td><span class="tag ${tagColor[c.origem] || 'tag-dark'}">${originLabel(c.origem)}</span></td><td class="mono">${fmtBRL(c.vgv)}</td></tr>`).join('');
+    <tr><td class="bold">${escapeHtml(c.oportunidade)}</td><td><span class="tag tag-dark">${c.exclusivo}</span></td><td><span class="tag ${tagColor[c.origem] || 'tag-dark'}">${labelOrigem(c.origem)}</span></td><td class="mono">${fmtBRL(c.vgv)}</td></tr>`).join('');
   const captacoesTotalVgv = data.captacoes.reduce((s, c) => s + c.vgv, 0);
   const captacoesTotalRow = `<tr class="total-row"><td>TOTAL</td><td></td><td>${t.captacoesCount} captações</td><td class="mono">${fmtBRL(captacoesTotalVgv)}</td></tr>`;
 
   // Build negocios table rows
   const negociosRows = data.negocios.map((n, i) => `
-    <tr><td class="mono" style="color:var(--g400)">${String(i + 1).padStart(2, '0')}</td><td class="bold">${escapeHtml(n.oportunidade)}</td><td><span class="tag ${tagColor[n.origem] || 'tag-dark'}">${originLabel(n.origem)}</span></td><td class="mono" style="text-align:right">${fmtBRL(n.vgv)}</td></tr>`).join('');
+    <tr><td class="mono" style="color:var(--g400)">${String(i + 1).padStart(2, '0')}</td><td class="bold">${escapeHtml(n.oportunidade)}</td><td><span class="tag ${tagColor[n.origem] || 'tag-dark'}">${labelOrigem(n.origem)}</span></td><td class="mono" style="text-align:right">${fmtBRL(n.vgv)}</td></tr>`).join('');
   const negociosTotalRow = `<tr class="total-row"><td></td><td>TOTAL</td><td>${t.negociosCount} negócios</td><td class="mono" style="text-align:right">${fmtBRL(t.negociosVgvTotal)}</td></tr>`;
 
   // Build treinamentos table rows

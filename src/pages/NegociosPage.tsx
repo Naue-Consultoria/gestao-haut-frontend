@@ -16,7 +16,7 @@ import { useToast } from '../hooks/useToast';
 import { useBrokerParceriaSelector } from '../hooks/useBrokerParceriaSelector';
 import { negociosService } from '../services/negocios.service';
 import { CURRENT_YEAR, ORIGENS } from '../config/constants';
-import { fmt } from '../utils/formatters';
+import { fmt, labelOrigem } from '../utils/formatters';
 import { Negocio } from '../types';
 
 export default function NegociosPage() {
@@ -124,7 +124,7 @@ export default function NegociosPage() {
               {data.map(row => (
                 <tr key={row.id} className="hover:bg-gray-50">
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{row.oportunidade}</td>
-                  <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{row.origem}</td>
+                  <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{labelOrigem(row.origem)}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 text-gray-700">{fmt(row.vgv)}</td>
                   <td className="px-6 py-3.5 text-sm border-b border-gray-100 flex gap-1"><Button variant="icon" size="sm" onClick={() => handleEdit(row)}><Pencil size={18} /></Button><Button variant="icon" size="sm" onClick={() => handleDelete(row.id)}><Trash2 size={18} /></Button></td>
                 </tr>
