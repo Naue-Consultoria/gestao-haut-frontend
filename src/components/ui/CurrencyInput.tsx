@@ -51,8 +51,8 @@ export function CurrencyInput({ value, onChange, placeholder = '0,00', className
     }
   }, [value]);
 
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    requestAnimationFrame(() => e.currentTarget.select());
+  const handleFocus = () => {
+    requestAnimationFrame(() => inputRef.current?.select());
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
